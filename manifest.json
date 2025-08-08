@@ -16,12 +16,19 @@
       "src": "static/logos/logo512.png",
       "sizes": "512x512",
       "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "static/screens/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     },
     {
-      "src": "static/logos/logo512maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "static/screens/screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png"
     }
   ]
 }

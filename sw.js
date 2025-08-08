@@ -1,48 +1,49 @@
-const CACHE_NAME = 'training-log-cache-v1';
+const CACHE_NAME = "training-log-cache-v1";
 const urlsToCache = [
-    '/',
-    'index.html',
-    'app.js',
-    'history.js',
-    'exercises.js',
-    'manifest.json',
-    'https://unpkg.com/@picocss/pico@latest/css/pico.min.css',
-    'https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.11/dexie.min.js'
+  "./",
+  "./index.html",
+  "./app.js",
+  "./history.js",
+  "./exercises.js",
+  "./manifest.json",
+  "./static/logos/logo192.png",
+  "./static/logos/logo512.png",
+  "./static/logos/logo512maskable.png",
+  "https://unpkg.com/@picocss/pico@latest/css/pico.min.css",
+  "https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.11/dexie.min.js",
 ];
 
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-            })
-    );
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("Opened cache");
+      return cache.addAll(urlsToCache);
+    })
+  );
 });
 
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                if (response) {
-                    return response;
-                }
-                return fetch(event.request);
-            })
-    );
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request);
+    })
+  );
 });
 
-self.addEventListener('activate', event => {
-    const cacheWhitelist = [CACHE_NAME];
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
+self.addEventListener("activate", (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
         })
-    );
+      );
+    })
+  );
 });
