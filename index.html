@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Training Log</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#007bff" />
+    <style>
+      @font-face {
+        font-family: "Bokor";
+        src: url("static/fonts/Bokor-Regular.ttf") format("truetype");
+      }
+      .hidden {
+        display: none;
+      }
+      main.container {
+        padding: 1rem;
+      }
+      article {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+      }
+      header {
+        padding: 0.5rem;
+      }
+      h1 {
+        font-family: "Bokor", sans-serif;
+        font-size: 4rem;
+        text-align: center;
+        margin-bottom: 0.75rem;
+      }
+      h2 {
+        margin-bottom: 0.75rem;
+      }
+      .icon-btn {
+        background: none;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+      }
+      .icon-btn svg {
+        width: 24px;
+        height: 24px;
+        stroke: var(--pico-primary);
+      }
+      .delete-btn svg {
+        stroke: var(--pico-color-red-500);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Training Log</h1>
+        <nav>
+          <button id="log-view-btn" class="active">Log Workout</button>
+          <button id="history-view-btn">History</button>
+          <button id="exercises-view-btn">Exercises</button>
+        </nav>
+      </header>
+
+      <main>
+        <section id="log-workout">
+          <form id="add-exercise-form">
+            <div class="form-group">
+              <label for="exercise">Exercise</label>
+              <select id="exercise" required>
+                <!-- Exercise options will be populated by JS -->
+              </select>
+            </div>
+            <div class="grid">
+              <div class="form-group">
+                <label for="weight">Weight (kg)</label>
+                <small id="last-weight-info"></small>
+                <input
+                  type="number"
+                  id="weight"
+                  min="0"
+                  placeholder="e.g., 100"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="sets">Sets</label>
+                <input
+                  type="number"
+                  id="sets"
+                  min="0"
+                  placeholder="e.g., 3"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="reps">Reps</label>
+                <input
+                  type="number"
+                  id="reps"
+                  min="0"
+                  placeholder="e.g., 5"
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit">Add Exercise</button>
+          </form>
+
+          <div id="current-workout-section">
+            <h2>Current Workout</h2>
+            <div id="current-workout-list">
+              <!-- Current exercises will be dynamically inserted here -->
+            </div>
+            <button id="save-workout-btn" hidden>Save Workout</button>
+          </div>
+        </section>
+
+        <section id="history" hidden>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            "
+          >
+            <h2>Workout History</h2>
+            <div>
+              <button
+                id="import-csv-btn"
+                class="icon-btn"
+                aria-label="Import CSV"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </button>
+              <button
+                id="export-csv-btn"
+                class="icon-btn"
+                aria-label="Export CSV"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="history-list">
+            <!-- Workouts will be dynamically inserted here -->
+          </div>
+          <input type="file" id="csv-file-input" accept=".csv" hidden />
+        </section>
+
+        <section id="exercises" hidden>
+          <h2>Manage Exercises</h2>
+          <div id="exercise-list">
+            <!-- Exercise list will be populated by JS -->
+          </div>
+          <form id="add-new-exercise-form">
+            <div class="form-group">
+              <label for="new-exercise-name">Add New Exercise</label>
+              <input
+                type="text"
+                id="new-exercise-name"
+                placeholder="e.g., Bicep Curls"
+                required
+              />
+            </div>
+            <button type="submit">Add Exercise Type</button>
+          </form>
+        </section>
+      </main>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.11/dexie.min.js"></script>
+    <script src="history.js"></script>
+    <script src="exercises.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
