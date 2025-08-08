@@ -56,11 +56,15 @@ document.addEventListener("DOMContentLoaded", () => {
     currentWorkout.forEach((exercise) => {
       const item = document.createElement("article");
       if (exercise.weight > 10) {
-        let weightPerSide = ((exercise.weight - 10) / 2);
+        let weightPerSide = (exercise.weight - 10) / 2;
         if (weightPerSide < 0) {
           weightPerSide = 0;
         }
-        item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${exercise.weight} kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar) &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
+        item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${
+          exercise.weight
+        } kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar) &times; ${
+          exercise.sets
+        } &times; ${exercise.reps}</p>`;
       } else {
         item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       }
@@ -101,11 +105,13 @@ document.addEventListener("DOMContentLoaded", () => {
       );
       if (exercise) {
         if (exercise.weight > 10) {
-          let weightPerSide = ((exercise.weight - 10) / 2);
+          let weightPerSide = (exercise.weight - 10) / 2;
           if (weightPerSide < 0) {
             weightPerSide = 0;
           }
-          lastWeightInfo.textContent = `Last: ${exercise.weight} kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar)`;
+          lastWeightInfo.textContent = `Last: ${
+            exercise.weight
+          } kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar)`;
         } else {
           lastWeightInfo.textContent = `Last: ${exercise.weight} kg`;
         }
@@ -174,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").then(
+      navigator.serviceWorker.register("./sw.js").then(
         (registration) => {
           console.log(
             "ServiceWorker registration successful with scope: ",
