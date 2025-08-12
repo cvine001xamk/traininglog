@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const logWorkoutSection = document.getElementById("log-workout");
   const historySection = document.getElementById("history");
   const exercisesSection = document.getElementById("exercises");
+  const chartView = document.getElementById('chart-view');
 
   const addExerciseForm = document.getElementById("add-exercise-form");
   const currentWorkoutList = document.getElementById("current-workout-list");
@@ -26,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- VIEWS ---
   const showView = (viewToShow) => {
-    [logWorkoutSection, historySection, exercisesSection].forEach(
+    [logWorkoutSection, historySection, exercisesSection, chartView].forEach(
       (view) => (view.hidden = true)
     );
     [logViewBtn, historyViewBtn, exercisesViewBtn].forEach((btn) =>
