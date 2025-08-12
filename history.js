@@ -159,7 +159,8 @@ function renderHistory() {
     workouts.forEach((workout) => {
       const date = new Date(workout.date).toISOString().split("T")[0];
       workout.exercises.forEach((ex) => {
-        csvContent += `${date},${ex.exercise},${ex.weight},${ex.sets},${ex.reps}\n`;
+        const row = `${date},${ex.exercise},${ex.weight},${ex.sets},${ex.reps}\n`;
+        csvContent += row;
       });
     });
 
