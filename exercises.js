@@ -3,12 +3,18 @@
 function manageExercises() {
     const db = new Dexie('trainingLog');
     db.version(1).stores({
+        workouts: '++id,date',
         exercises: '++id,name'
     });
 
     const exerciseList = document.getElementById('exercise-list');
     const addNewExerciseForm = document.getElementById('add-new-exercise-form');
     const newExerciseNameInput = document.getElementById('new-exercise-name');
+    const chartView = document.getElementById('chart-view');
+    const backToExercisesBtn = document.getElementById('back-to-exercises-btn');
+    const exercisesView = document.getElementById('exercises');
+    const chartTitle = document.getElementById('chart-title');
+    let chart;
 
     const renderExerciseManagementList = async () => {
         const exercises = await db.exercises.toArray();
@@ -19,7 +25,10 @@ function manageExercises() {
             item.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span>${ex.name}</span>
-                    <button class="delete-exercise-btn" data-id="${ex.id}" style="width: auto; background-color: var(--pico-color-red-500); margin-left: 1rem;">&times;</button>
+                    <div>
+                        <button class="view-history-btn" data-name="${ex.name}" style="width: auto; margin-right: 0.5rem;">View History</button>
+                        <button class="delete-exercise-btn" data-id="${ex.id}" style="width: auto; background-color: var(--pico-color-red-500);">&times;</button>
+                    </div>
                 </div>
             `;
             exerciseList.appendChild(item);
@@ -36,6 +45,45 @@ function manageExercises() {
             option.textContent = ex.name;
             exerciseSelect.appendChild(option);
         });
+    };
+
+    const renderChart = async (exerciseName) => {
+        const workouts = await db.workouts.orderBy('date').toArray();
+        const exerciseHistory = workouts.flatMap(w =>
+            w.exercises
+                .filter(ex => ex.exercise === exerciseName)
+                .map(ex => ({ date: w.date, weight: ex.weight }))
+        );
+
+        if (chart) {
+            chart.destroy();
+        }
+
+        chartTitle.textContent = `${exerciseName} - Weight History`;
+
+        const ctx = document.getElementById('exercise-chart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: exerciseHistory.map(h => new Date(h.date).toLocaleDateString()),
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: exerciseHistory.map(h => h.weight),
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        exercisesView.hidden = true;
+        chartView.hidden = false;
     };
 
     addNewExerciseForm.addEventListener('submit', async (e) => {
@@ -55,7 +103,15 @@ function manageExercises() {
             await db.exercises.delete(exerciseId);
             await renderExerciseOptions();
             await renderExerciseManagementList();
+        } else if (e.target.classList.contains('view-history-btn')) {
+            const exerciseName = e.target.dataset.name;
+            await renderChart(exerciseName);
         }
+    });
+
+    backToExercisesBtn.addEventListener('click', () => {
+        chartView.hidden = true;
+        exercisesView.hidden = false;
     });
 
     renderExerciseManagementList();

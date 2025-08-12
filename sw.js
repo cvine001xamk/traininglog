@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v1";
+const CACHE_NAME = "training-log-cache-v3";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -6,11 +6,13 @@ const urlsToCache = [
   "./history.js",
   "./exercises.js",
   "./manifest.json",
+  "./pico.min.css",
+  "./dexie.min.js",
+  "./favicon.ico",
+  "./static/fonts/Bokor-Regular.ttf",
+  "./static/logos/logo.png",
   "./static/logos/logo192.png",
   "./static/logos/logo512.png",
-  "./static/logos/logo512maskable.png",
-  "https://unpkg.com/@picocss/pico@latest/css/pico.min.css",
-  "https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.11/dexie.min.js",
 ];
 
 self.addEventListener("install", (event) => {

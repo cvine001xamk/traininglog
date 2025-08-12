@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Training Log</title>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css"
-    />
+    <link rel="stylesheet" href="pico.min.css" />
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#007bff" />
     <style>
@@ -196,10 +193,17 @@
             <button type="submit">Add Exercise Type</button>
           </form>
         </section>
+
+        <section id="chart-view" hidden>
+          <button id="back-to-exercises-btn">Back to Exercises</button>
+          <h2 id="chart-title"></h2>
+          <canvas id="exercise-chart"></canvas>
+        </section>
       </main>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dexie/4.0.11/dexie.min.js"></script>
+    <script src="dexie.min.js"></script>
+    <script src="chart.min.js"></script>
     <script src="history.js"></script>
     <script src="exercises.js"></script>
     <script src="app.js"></script>
