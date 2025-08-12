@@ -14,7 +14,7 @@ function renderHistory() {
     const workouts = await db.workouts.orderBy("date").toArray();
     historyList.innerHTML =
       workouts.length === 0
-        ? '<p style="text-align: center;">No workouts logged yet.</p>'
+        ? '<p class="text-center">No workouts logged yet.</p>'
         : "";
     const reversedWorkouts = [...workouts].reverse();
     reversedWorkouts.forEach((workout) => {
@@ -27,9 +27,6 @@ function renderHistory() {
     article.dataset.id = workout.id;
 
     const header = document.createElement("header");
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    header.style.alignItems = "center";
 
     const date = new Date(workout.date).toLocaleDateString("en-GB", {
       weekday: "long",
@@ -42,6 +39,7 @@ function renderHistory() {
     header.appendChild(dateEl);
 
     const buttonGroup = document.createElement("div");
+    buttonGroup.className = "button-group";
 
     const editBtn = document.createElement("button");
     editBtn.className = "icon-btn";
@@ -69,7 +67,6 @@ function renderHistory() {
     exercisesContainer.className = "exercises-container";
     workout.exercises.forEach((ex) => {
       const exDiv = document.createElement("div");
-      exDiv.style.marginBottom = "0.5rem";
 
       const exerciseName = document.createElement("strong");
       exerciseName.textContent = ex.exercise;
@@ -103,7 +100,7 @@ function renderHistory() {
 
     workout.exercises.forEach((ex, index) => {
       const form = document.createElement("form");
-      form.className = "grid";
+      form.className = "grid edit-form";
       form.dataset.index = index;
       form.innerHTML = `
                 <input type="text" value="${ex.exercise}" data-field="exercise" disabled>
@@ -115,13 +112,10 @@ function renderHistory() {
     });
 
     const footer = document.createElement("footer");
-    footer.style.display = "flex";
-    footer.style.justifyContent = "flex-end";
+    footer.className = "edit-form-footer";
 
     const saveBtn = document.createElement("button");
     saveBtn.textContent = "Save Changes";
-    saveBtn.style.width = "auto";
-    saveBtn.style.marginRight = "0.5rem";
     saveBtn.onclick = async () => {
       const updatedExercises = [];
       const forms = exercisesContainer.querySelectorAll("form");
@@ -140,7 +134,6 @@ function renderHistory() {
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "Cancel";
     cancelBtn.className = "secondary";
-    cancelBtn.style.width = "auto";
     cancelBtn.onclick = () => {
       historyList.innerHTML = "";
       render();

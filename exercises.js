@@ -23,11 +23,11 @@ function manageExercises() {
             const item = document.createElement('article');
             item.classList.add('exercise-list-item');
             item.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
                     <span>${ex.name}</span>
-                    <div>
-                        <button class="view-history-btn" data-name="${ex.name}" style="width: auto; margin-right: 0.5rem;">View History</button>
-                        <button class="delete-exercise-btn" data-id="${ex.id}" style="width: auto; background-color: var(--pico-color-red-500);">&times;</button>
+                    <div class="button-group">
+                        <button class="btn view-history-btn" data-name="${ex.name}">View History</button>
+                        <button class="btn delete-btn" data-id="${ex.id}">&times;</button>
                     </div>
                 </div>
             `;

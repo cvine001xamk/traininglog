@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="https://cvine001xamk.github.io/traininglog/" />
     <title>Training Log</title>
-    <link rel="stylesheet" href="./pico.min.css" />
+    <link rel="stylesheet" href="./style.css" />
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#007bff" />
     <style>
@@ -13,49 +13,10 @@
         font-family: "Bokor";
         src: url("./static/fonts/Bokor-Regular.ttf") format("truetype");
       }
-      .hidden {
-        display: none;
-      }
-      main.container {
-        padding: 1rem;
-      }
-      article {
-        padding: 0.75rem;
-        margin-bottom: 0.5rem;
-      }
-      header {
-        padding: 0.5rem;
-      }
-      h1 {
-        font-family: "Bokor", sans-serif;
-        font-size: 4rem;
-        text-align: center;
-        margin-bottom: 0.75rem;
-      }
-      h2 {
-        margin-bottom: 0.75rem;
-      }
-      .icon-btn {
-        background: none;
-        border: none;
-        padding: 0.5rem;
-        cursor: pointer;
-      }
-      .icon-btn svg {
-        width: 24px;
-        height: 24px;
-        stroke: var(--pico-primary);
-      }
-      .delete-btn svg {
-        stroke: var(--pico-color-red-500);
-      }
-      nav button {
-        margin-right: 0.5rem;
-      }
     </style>
   </head>
   <body>
-    <main class="container">
+    <div class="container">
       <header>
         <h1>Training Log</h1>
         <nav>
@@ -120,13 +81,7 @@
         </section>
 
         <section id="history" hidden>
-          <div
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            "
-          >
+          <div class="section-header">
             <h2>Workout History</h2>
             <div>
               <button
@@ -204,7 +159,7 @@
           <canvas id="exercise-chart"></canvas>
         </section>
       </main>
-    </main>
+    </div>
 
     <script src="./dexie.min.js"></script>
     <script src="./chart.min.js"></script>
