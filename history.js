@@ -177,6 +177,9 @@ function renderHistory() {
       const lines = csv.split("\n").filter((line) => line);
       if (lines.length <= 1) return;
 
+      const existingWorkouts = await db.workouts.toArray();
+      const existingWorkoutDates = new Set(existingWorkouts.map(w => new Date(w.date).toISOString().split('T')[0]));
+
       const newWorkouts = {};
       const allExerciseNames = new Set(
         (await db.exercises.toArray()).map((e) => e.name)
@@ -185,6 +188,12 @@ function renderHistory() {
       for (let i = 1; i < lines.length; i++) {
         const [date, exercise, weight, sets, reps] = lines[i].split(",");
         if (date && exercise && weight && sets && reps) {
+          const workoutDate = new Date(date).toISOString().split('T')[0];
+          if (existingWorkoutDates.has(workoutDate)) {
+            console.log(`Skipping duplicate workout for date: ${date}`);
+            continue;
+          }
+
           if (!newWorkouts[date]) {
             newWorkouts[date] = {
               date: new Date(date).toISOString(),
@@ -193,9 +202,9 @@ function renderHistory() {
           }
           newWorkouts[date].exercises.push({
             exercise: exercise.trim(),
-            weight: weight.trim(),
-            sets: sets.trim(),
-            reps: reps.trim(),
+            weight: parseFloat(weight.trim()),
+            sets: parseInt(sets.trim()),
+            reps: parseInt(reps.trim()),
           });
           if (!allExerciseNames.has(exercise.trim())) {
             await db.exercises.add({ name: exercise.trim() });
@@ -203,7 +212,9 @@ function renderHistory() {
           }
         }
       }
-      await db.workouts.bulkAdd(Object.values(newWorkouts));
+      if(Object.values(newWorkouts).length > 0) {
+        await db.workouts.bulkAdd(Object.values(newWorkouts));
+      }
       await render();
     };
     reader.readAsText(file);
