@@ -155,17 +155,15 @@ function renderHistory() {
     const workouts = await db.workouts.orderBy("date").toArray();
     if (workouts.length === 0) return;
 
-    let csvContent =
-      "data:text/csv;charset=utf-8,Date,Exercise,Weight,Sets,Reps\n";
+    let csvContent = "Date,Exercise,Weight,Sets,Reps\n";
     workouts.forEach((workout) => {
       const date = new Date(workout.date).toISOString().split("T")[0];
       workout.exercises.forEach((ex) => {
-        csvContent += `Date,Exercise,Weight,Sets,Reps
-`;
+        csvContent += `${date},${ex.exercise},${ex.weight},${ex.sets},${ex.reps}\n`;
       });
     });
 
-    const encodedUri = encodeURI(csvContent);
+    const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     const date = new Date().toISOString().split('T')[0];
@@ -217,9 +215,18 @@ function renderHistory() {
     reader.readAsText(file);
   };
 
-  exportBtn.addEventListener("click", exportToCSV);
-  importBtn.addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", importFromCSV);
+  // Initialize event listeners only once
+  const initHistoryEventListeners = () => {
+    exportBtn.addEventListener("click", exportToCSV);
+    importBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", importFromCSV);
+    // Set a flag to ensure this doesn't run again
+    initHistoryEventListeners.initialized = true;
+  };
+
+  if (!initHistoryEventListeners.initialized) {
+    initHistoryEventListeners();
+  }
 
   render();
 }
