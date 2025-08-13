@@ -27,7 +27,6 @@ function manageExercises() {
                     <span>${ex.name}</span>
                     <div class="button-group">
                         <button class="btn view-history-btn" data-name="${ex.name}">View History</button>
-                        <button class="btn delete-btn" data-id="${ex.id}">&times;</button>
                     </div>
                 </div>
             `;
@@ -98,12 +97,7 @@ function manageExercises() {
     });
 
     exerciseList.addEventListener('click', async (e) => {
-        if (e.target.classList.contains('delete-exercise-btn')) {
-            const exerciseId = parseInt(e.target.dataset.id);
-            await db.exercises.delete(exerciseId);
-            await renderExerciseOptions();
-            await renderExerciseManagementList();
-        } else if (e.target.classList.contains('view-history-btn')) {
+        if (e.target.classList.contains('view-history-btn')) {
             const exerciseName = e.target.dataset.name;
             await renderChart(exerciseName);
         }
