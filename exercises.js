@@ -60,6 +60,10 @@ function manageExercises() {
 
         chartTitle.textContent = `${exerciseName} - Weight History`;
 
+        const weights = exerciseHistory.map(h => h.weight);
+        const minWeight = Math.min(...weights);
+        const maxWeight = Math.max(...weights);
+
         const ctx = document.getElementById('exercise-chart').getContext('2d');
         chart = new Chart(ctx, {
             type: 'line',
@@ -67,7 +71,7 @@ function manageExercises() {
                 labels: exerciseHistory.map(h => new Date(h.date).toLocaleDateString()),
                 datasets: [{
                     label: 'Weight (kg)',
-                    data: exerciseHistory.map(h => h.weight),
+                    data: weights,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     tension: 0.1
                 }]
@@ -75,7 +79,8 @@ function manageExercises() {
             options: {
                 scales: {
                     y: {
-                        beginAtZero: true
+                        min: minWeight - 5,
+                        max: maxWeight + 5
                     }
                 }
             }
