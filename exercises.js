@@ -79,8 +79,8 @@ function manageExercises() {
             options: {
                 scales: {
                     y: {
-                        min: minWeight - 5,
-                        max: maxWeight + 5
+                        suggestedMin: minWeight - 5,
+                        suggestedMax: maxWeight + 5
                     }
                 }
             }
