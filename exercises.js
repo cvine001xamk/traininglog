@@ -61,8 +61,20 @@ function manageExercises() {
         chartTitle.textContent = `${exerciseName} - Weight History`;
 
         const weights = exerciseHistory.map(h => h.weight);
-        const minWeight = Math.min(...weights);
-        const maxWeight = Math.max(...weights);
+        
+        const options = {
+            scales: {
+                y: {}
+            }
+        };
+
+        if (weights.length > 0) {
+            const minWeight = Math.min(...weights);
+            const maxWeight = Math.max(...weights);
+            console.log("minWeight:", minWeight, "maxWeight:", maxWeight);
+            options.scales.y.min = minWeight - 5;
+            options.scales.y.max = maxWeight + 5;
+        }
 
         const ctx = document.getElementById('exercise-chart').getContext('2d');
         chart = new Chart(ctx, {
@@ -76,14 +88,7 @@ function manageExercises() {
                     tension: 0.1
                 }]
             },
-            options: {
-                scales: {
-                    y: {
-                        suggestedMin: minWeight - 5,
-                        suggestedMax: maxWeight + 5
-                    }
-                }
-            }
+            options: options
         });
 
         exercisesView.hidden = true;
