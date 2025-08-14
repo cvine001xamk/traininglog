@@ -222,6 +222,7 @@ article header {
 
 #chart-view {
   margin-top: 2rem;
+  height: 66vh;
 }
 
 #back-to-exercises-btn {
