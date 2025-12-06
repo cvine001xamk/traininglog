@@ -1,10 +1,11 @@
-const CACHE_NAME = "training-log-cache-v6";
+const CACHE_NAME = "training-log-cache-v7";
 const urlsToCache = [
   "./",
   "./index.html",
   "./app.js",
   "./history.js",
   "./exercises.js",
+  "./utils.js",
   "./manifest.json",
   "./style.css",
   "./dexie.min.js",
