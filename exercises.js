@@ -111,8 +111,12 @@ const renderChart = async (exerciseName) => {
     if (weights.length > 0) {
         const minWeight = Math.min(...weights);
         const maxWeight = Math.max(...weights);
-        options.scales.y.min = minWeight - 5;
-        options.scales.y.max = maxWeight + 5;
+        // Use a tighter padding (e.g., 1kg) to show small progress better
+        // But ensure we don't zoom in too much if values are identical
+        const padding = (maxWeight - minWeight) === 0 ? 5 : 1;
+        
+        options.scales.y.min = Math.floor(minWeight - padding);
+        options.scales.y.max = Math.ceil(maxWeight + padding);
     }
 
     const ctx = document.getElementById('exercise-chart').getContext('2d');
