@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v9";
+const CACHE_NAME = "training-log-cache-v11";
 const urlsToCache = [
   "./",
   "./index.html",

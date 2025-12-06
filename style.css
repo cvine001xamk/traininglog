@@ -146,8 +146,12 @@ select {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Force 3 columns for inputs */
+  grid-template-columns: 1fr 1fr; /* 2 columns for mobile */
   gap: 0.5rem;
+}
+
+.grid > .form-group:first-child {
+  grid-column: span 2; /* Weight takes full width */
 }
 
 /* Cards / Articles */
@@ -208,9 +212,10 @@ article header {
 }
 
 #last-weight-info {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #ccc;
-  float: right;
+  display: block; /* Own line */
+  margin-bottom: 0.25rem;
 }
 
 #current-workout-list {
@@ -270,6 +275,10 @@ article header {
   }
   
   .grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(3, 1fr); /* Back to 3 columns */
+  }
+  
+  .grid > .form-group:first-child {
+    grid-column: auto; /* Reset span */
   }
 }
