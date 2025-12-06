@@ -234,6 +234,7 @@ article header {
 
 /* Chart View - Maximized */
 #chart-view {
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
@@ -243,12 +244,11 @@ article header {
   z-index: 1000;
   padding: 0.5rem;
   box-sizing: border-box;
-  display: flex;
   flex-direction: column;
 }
 
-#chart-view[hidden] {
-  display: none !important;
+#chart-view:not([hidden]) {
+  display: flex;
 }
 
 #back-to-exercises-btn {
