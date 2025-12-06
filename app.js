@@ -98,23 +98,35 @@ document.addEventListener("DOMContentLoaded", () => {
       .orderBy("date")
       .reverse()
       .toArray();
+
+    let lastWeight = null;
+    let maxWeight = 0;
+
     for (const workout of workoutsWithExercise) {
       const exercise = workout.exercises.find(
         (ex) => ex.exercise === exerciseName
       );
       if (exercise) {
-        const plates = calculatePlates(exercise.weight);
-        if (plates) {
-          lastWeightInfo.textContent = `Last: ${
-            exercise.weight
-          } kg (${plates.weightPerSide} kg/side + 10 kg bar)`;
-        } else {
-          lastWeightInfo.textContent = `Last: ${exercise.weight} kg`;
+        if (lastWeight === null) {
+          lastWeight = exercise.weight;
         }
-        return;
+        if (exercise.weight > maxWeight) {
+          maxWeight = exercise.weight;
+        }
       }
     }
-    lastWeightInfo.textContent = "";
+
+    if (lastWeight !== null) {
+      const plates = calculatePlates(lastWeight);
+      let infoText = `Last: ${lastWeight}kg`;
+      if (plates) {
+        infoText += ` (${plates.weightPerSide}kg/side)`;
+      }
+      infoText += ` | Max: ${maxWeight}kg`;
+      lastWeightInfo.textContent = infoText;
+    } else {
+      lastWeightInfo.textContent = "";
+    }
   };
 
   // --- EVENT LISTENERS ---

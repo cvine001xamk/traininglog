@@ -33,9 +33,10 @@ h2 {
 
 h1 {
   font-family: "Bokor", sans-serif;
-  font-size: 2rem; /* Smaller header */
+  font-size: 1.75rem; /* Even smaller header */
   color: var(--text-color);
   margin-top: 0;
+  margin-bottom: 0.5rem;
 }
 
 h2 {
@@ -67,10 +68,10 @@ nav {
 button,
 .btn {
   display: inline-block;
-  padding: 0.4rem 0.8rem; /* Compact buttons */
+  padding: 0.3rem 0.6rem; /* More compact buttons */
   border: 1px solid transparent;
   border-radius: var(--border-radius);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
