@@ -1,11 +1,9 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // --- DATABASE ---
-  const db = new Dexie("trainingLog");
-  db.version(1).stores({
-    exercises: "++id,name",
-    workouts: "++id,date",
-  });
+// app.js
+import { db, calculatePlates } from './utils.js';
+import { initHistory, renderHistory } from './history.js';
+import { initExercises, manageExercises } from './exercises.js';
 
+document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMENTS ---
   const logViewBtn = document.getElementById("log-view-btn");
   const historyViewBtn = document.getElementById("history-view-btn");
@@ -40,10 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const showLogView = () =>
     showView({ section: logWorkoutSection, button: logViewBtn });
+  
   const showHistoryView = () => {
     showView({ section: historySection, button: historyViewBtn });
     renderHistory();
   };
+  
   const showExercisesView = () => {
     showView({ section: exercisesSection, button: exercisesViewBtn });
     manageExercises();
@@ -56,14 +56,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentWorkout.forEach((exercise) => {
       const item = document.createElement("article");
-      if (exercise.weight > 10) {
-        let weightPerSide = (exercise.weight - 10) / 2;
-        if (weightPerSide < 0) {
-          weightPerSide = 0;
-        }
+      const plates = calculatePlates(exercise.weight);
+      
+      if (plates) {
         item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${
           exercise.weight
-        } kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar) &times; ${
+        } kg (${plates.weightPerSide} kg/side + 10 kg bar) &times; ${
           exercise.sets
         } &times; ${exercise.reps}</p>`;
       } else {
@@ -105,14 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
         (ex) => ex.exercise === exerciseName
       );
       if (exercise) {
-        if (exercise.weight > 10) {
-          let weightPerSide = (exercise.weight - 10) / 2;
-          if (weightPerSide < 0) {
-            weightPerSide = 0;
-          }
+        const plates = calculatePlates(exercise.weight);
+        if (plates) {
           lastWeightInfo.textContent = `Last: ${
             exercise.weight
-          } kg (${weightPerSide.toFixed(2)} kg/side + 10 kg bar)`;
+          } kg (${plates.weightPerSide} kg/side + 10 kg bar)`;
         } else {
           lastWeightInfo.textContent = `Last: ${exercise.weight} kg`;
         }
@@ -173,6 +168,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ];
       await db.exercises.bulkAdd(defaultExercises.map((name) => ({ name })));
     }
+    
+    // Initialize other modules
+    initHistory();
+    initExercises();
+
     await renderExerciseOptions();
     showLogView();
   };
