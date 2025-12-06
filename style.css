@@ -247,8 +247,8 @@ article header {
   flex-direction: column;
 }
 
-#chart-view.hidden {
-  display: none;
+#chart-view[hidden] {
+  display: none !important;
 }
 
 #back-to-exercises-btn {
