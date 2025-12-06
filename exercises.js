@@ -101,6 +101,8 @@ const renderChart = async (exerciseName) => {
     const weights = exerciseHistory.map(h => h.weight);
     
     const options = {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
             y: {}
         }

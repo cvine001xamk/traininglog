@@ -1,16 +1,16 @@
 /* General Body & Typography */
 :root {
-  --primary-color: #3399ff; /* A brighter blue for better contrast */
-  --secondary-color: #99aab5; /* A lighter grey */
+  --primary-color: #3399ff;
+  --secondary-color: #99aab5;
   --background-color: #050c38;
   --surface-color: #1b2062;
-  --text-color: #ffffff; /* White text for dark background */
+  --text-color: #ffffff;
   --border-color: #6700a3;
   --danger-color: #dc3545;
   --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     sans-serif;
-  --border-radius: 0.375rem;
-  --spacing: 1rem;
+  --border-radius: 0.25rem; /* Reduced radius */
+  --spacing: 0.5rem; /* Reduced global spacing */
 }
 
 body {
@@ -22,52 +22,55 @@ body {
   padding: var(--spacing);
   min-height: 100vh;
   box-sizing: border-box;
+  font-size: 14px; /* Slightly smaller base font */
 }
 
 h1,
 h2 {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 h1 {
   font-family: "Bokor", sans-serif;
-  font-size: 3rem;
+  font-size: 2rem; /* Smaller header */
   color: var(--text-color);
+  margin-top: 0;
 }
 
 h2 {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   color: var(--secondary-color);
 }
 
 /* Layout */
 .container {
-  max-width: 800px;
+  max-width: 100%; /* Full width on mobile */
   margin: 0 auto;
-  padding: var(--spacing);
+  padding: 0;
 }
 
 /* Header & Navigation */
 header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 nav {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
 /* Buttons */
 button,
 .btn {
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem; /* Compact buttons */
   border: 1px solid transparent;
   border-radius: var(--border-radius);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
@@ -96,14 +99,14 @@ button.secondary,
 .icon-btn {
   background: none;
   border: none;
-  padding: 0.5rem;
+  padding: 0.25rem;
   color: var(--primary-color);
   cursor: pointer;
 }
 
 .icon-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   stroke: currentColor;
 }
 
@@ -113,34 +116,37 @@ button.secondary,
 
 /* Forms */
 form {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 input[type="text"],
 input[type="number"],
 select {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  font-size: 1rem;
-  box-sizing: border-box; /* Ensures padding doesn't affect width */
+  font-size: 1rem; /* Keep input font size 16px to prevent zoom on iOS */
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr); /* Force 3 columns for inputs */
+  gap: 0.5rem;
 }
 
 /* Cards / Articles */
@@ -148,16 +154,16 @@ article {
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.75rem; /* Compact padding */
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 article header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   padding: 0;
 }
 
@@ -165,25 +171,34 @@ article header {
 #current-workout-section,
 #history,
 #exercises {
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
 #history-list .exercises-container div {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 0.25rem;
+}
+
+#history-list .exercises-container div:last-child {
+  border-bottom: none;
 }
 
 #exercise-list .exercise-list-item {
-  padding: 1rem;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .exercise-list-item div {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.exercise-list-item button {
-  padding: 0.5rem 1rem;
+  width: 100%;
 }
 
 /* Utility */
@@ -191,14 +206,14 @@ article header {
   display: none;
 }
 
-
 #last-weight-info {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #ccc;
+  float: right;
 }
 
 #current-workout-list {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .current-workout-item {
@@ -209,29 +224,51 @@ article header {
   border-bottom: 1px solid #444;
 }
 
-.current-workout-item:last-child {
-  border-bottom: none;
-}
-
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
+/* Chart View - Maximized */
 #chart-view {
-  margin-top: 2rem;
-  height: 66vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background-color);
+  z-index: 1000;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+#chart-view.hidden {
+  display: none;
 }
 
 #back-to-exercises-btn {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  align-self: flex-start;
+}
+
+#exercise-chart {
+  flex-grow: 1;
+  width: 100% !important;
+  height: auto !important;
 }
 
 /* Responsive Design */
-@media (max-width: 600px) {
+@media (min-width: 600px) {
+  .container {
+    max-width: 800px;
+    padding: var(--spacing);
+  }
+  
   .grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
 }

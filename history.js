@@ -73,18 +73,13 @@ const createWorkoutArticle = (workout) => {
   workout.exercises.forEach((ex) => {
     const exDiv = document.createElement("div");
 
-    const exerciseName = document.createElement("strong");
+    const exerciseName = document.createElement("span");
+    exerciseName.style.fontWeight = "bold";
     exerciseName.textContent = ex.exercise;
     exDiv.appendChild(exerciseName);
 
-    const details = document.createElement("div");
-    const plates = calculatePlates(ex.weight);
-    
-    if (plates) {
-      details.textContent = `${ex.weight} kg (${plates.weightPerSide} kg/side + 10 kg bar) × ${ex.sets} × ${ex.reps}`;
-    } else {
-      details.textContent = `${ex.weight} kg × ${ex.sets} × ${ex.reps}`;
-    }
+    const details = document.createElement("span");
+    details.textContent = `${ex.weight}kg × ${ex.sets} × ${ex.reps}`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);
   });
