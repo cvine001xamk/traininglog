@@ -111,11 +111,10 @@ const renderChart = async (exerciseName) => {
     if (weights.length > 0) {
         const minWeight = Math.min(...weights);
         const maxWeight = Math.max(...weights);
-        // Use more padding (e.g., 3kg) to give breathing room
-        // But ensure we don't zoom in too much if values are identical
-        const padding = (maxWeight - minWeight) === 0 ? 5 : 3;
+        // Use more padding (e.g., 10kg) to give breathing room as requested
+        const padding = 10;
         
-        options.scales.y.min = Math.floor(minWeight - padding);
+        options.scales.y.min = 0;
         options.scales.y.max = Math.ceil(maxWeight + padding);
     }
     

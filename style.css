@@ -282,3 +282,10 @@ article header {
     grid-column: auto; /* Reset span */
   }
 }
+
+@media (max-width: 600px) {
+  button, .btn {
+    padding: 0.5rem 1rem; /* Larger touch targets */
+    font-size: 1rem;
+  }
+}
