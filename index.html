@@ -150,12 +150,23 @@
                 required
               />
             </div>
+            <div class="form-group">
+              <label for="new-exercise-bar-weight">Default Bar Weight</label>
+              <select id="new-exercise-bar-weight">
+                <option value="8">8 kg</option>
+                <option value="10">10 kg</option>
+                <option value="20" selected>20 kg</option>
+              </select>
+            </div>
             <button type="submit">Add Exercise Type</button>
           </form>
         </section>
 
         <section id="chart-view" hidden>
-          <button id="back-to-exercises-btn">Back to Exercises</button>
+          <div class="chart-controls">
+            <button id="back-to-exercises-btn">Back to Exercises</button>
+            <button id="reset-zoom-btn" class="secondary">Reset Zoom</button>
+          </div>
           <h2 id="chart-title"></h2>
           <canvas id="exercise-chart"></canvas>
         </section>

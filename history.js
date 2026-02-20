@@ -116,11 +116,13 @@ const showEditView = (article, workout) => {
     const updatedExercises = [];
     const forms = exercisesContainer.querySelectorAll("form");
     forms.forEach((form) => {
+      const index = form.dataset.index;
       updatedExercises.push({
         exercise: form.querySelector('[data-field="exercise"]').value,
         weight: form.querySelector('[data-field="weight"]').value,
         sets: form.querySelector('[data-field="sets"]').value,
         reps: form.querySelector('[data-field="reps"]').value,
+        barWeight: workout.exercises[index].barWeight
       });
     });
     await db.workouts.update(workout.id, { exercises: updatedExercises });

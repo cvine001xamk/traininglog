@@ -56,12 +56,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentWorkout.forEach((exercise) => {
       const item = document.createElement("article");
-      const plates = calculatePlates(exercise.weight);
+      const plates = calculatePlates(exercise.weight, exercise.barWeight);
       
       if (plates) {
         item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${
           exercise.weight
-        } kg (${plates.weightPerSide} kg/side + 10 kg bar) &times; ${
+        } kg (${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar) &times; ${
           exercise.sets
         } &times; ${exercise.reps}</p>`;
       } else {
@@ -117,7 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (lastWeight !== null) {
-      const plates = calculatePlates(lastWeight);
+      const exerciseData = await db.exercises.get({ name: exerciseName });
+      const barWeight = exerciseData ? (exerciseData.barWeight || 20) : 20;
+      const plates = calculatePlates(lastWeight, barWeight);
       let infoText = `Last: ${lastWeight}kg`;
       if (plates) {
         infoText += ` (${plates.weightPerSide}kg/side)`;
@@ -143,11 +145,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const exerciseName = document.getElementById("exercise").value;
     if (!exerciseName) return;
 
+    const exerciseData = await db.exercises.get({ name: exerciseName });
+    const barWeight = exerciseData ? (exerciseData.barWeight || 20) : 20;
+
     currentWorkout.push({
       exercise: exerciseName,
       weight: document.getElementById("weight").value,
       sets: document.getElementById("sets").value,
       reps: document.getElementById("reps").value,
+      barWeight: barWeight
     });
     renderCurrentWorkout();
     await renderExerciseOptions();
@@ -172,13 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const exerciseCount = await db.exercises.count();
     if (exerciseCount === 0) {
       const defaultExercises = [
-        "Back Squat",
-        "Bench Press",
-        "Overhead Press",
-        "Barbell Row",
-        "Deadlift",
+        { name: "Back Squat", barWeight: 20 },
+        { name: "Bench Press", barWeight: 20 },
+        { name: "Overhead Press", barWeight: 20 },
+        { name: "Barbell Row", barWeight: 20 },
+        { name: "Deadlift", barWeight: 20 },
       ];
-      await db.exercises.bulkAdd(defaultExercises.map((name) => ({ name })));
+      await db.exercises.bulkAdd(defaultExercises);
     }
     
     // Initialize other modules

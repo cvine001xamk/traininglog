@@ -9,6 +9,7 @@ let backToExercisesBtn;
 let exercisesView;
 let chartTitle;
 let chart;
+let resetZoomBtn;
 
 export function initExercises() {
     exerciseList = document.getElementById('exercise-list');
@@ -18,19 +19,20 @@ export function initExercises() {
     backToExercisesBtn = document.getElementById('back-to-exercises-btn');
     exercisesView = document.getElementById('exercises');
     chartTitle = document.getElementById('chart-title');
+    resetZoomBtn = document.getElementById('reset-zoom-btn');
 
     // Initialize event listeners only once
     if (!initExercises.initialized) {
+        resetZoomBtn.addEventListener('click', () => {
+            if (chart) chart.resetZoom();
+        });
+
         addNewExerciseForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const newExerciseName = newExerciseNameInput.value.trim();
+            const barWeight = parseInt(document.getElementById('new-exercise-bar-weight').value);
             if (newExerciseName) {
-                await db.exercises.add({ name: newExerciseName });
-                // We need to re-render the options in app.js, but since we don't have direct access,
-                // we can rely on the user navigating or we could export a refresh function from app.js.
-                // For simplicity/decoupling, we just update the local list.
-                // Ideally, we'd use a reactive store or event bus.
-                // For now, let's just update the management list.
+                await db.exercises.add({ name: newExerciseName, barWeight: barWeight });
                 await renderExerciseManagementList();
                 newExerciseNameInput.value = '';
                 alert("Exercise added! Go to 'Log Workout' to see it in the list.");
@@ -41,6 +43,14 @@ export function initExercises() {
             if (e.target.classList.contains('view-history-btn')) {
                 const exerciseName = e.target.dataset.name;
                 await renderChart(exerciseName);
+            }
+        });
+
+        exerciseList.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('bar-weight-select')) {
+                const id = parseInt(e.target.dataset.id);
+                const barWeight = parseInt(e.target.value);
+                await db.exercises.update(id, { barWeight: barWeight });
             }
         });
 
@@ -63,9 +73,20 @@ const renderExerciseManagementList = async () => {
     exercises.forEach(ex => {
         const item = document.createElement('article');
         item.classList.add('exercise-list-item');
+        const barWeight = ex.barWeight || 20; // Default to 20kg if not set
         item.innerHTML = `
             <div>
-                <span>${ex.name}</span>
+                <div class="exercise-info">
+                    <strong>${ex.name}</strong>
+                    <div class="bar-selection">
+                        <label>Bar: </label>
+                        <select class="bar-weight-select" data-id="${ex.id}">
+                            <option value="8" ${barWeight === 8 ? 'selected' : ''}>8 kg</option>
+                            <option value="10" ${barWeight === 10 ? 'selected' : ''}>10 kg</option>
+                            <option value="20" ${barWeight === 20 ? 'selected' : ''}>20 kg</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="button-group">
                     <button class="btn view-history-btn" data-name="${ex.name}">View History</button>
                 </div>
@@ -76,11 +97,14 @@ const renderExerciseManagementList = async () => {
 };
 
 const renderChart = async (exerciseName) => {
-    // Lazy load Chart.js
+    // Lazy load Chart.js and plugins
     try {
         await loadScript('./chart.min.js');
+        // Load time adapter and zoom plugin from CDN
+        await loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js');
     } catch (e) {
-        console.error("Failed to load Chart.js", e);
+        console.error("Failed to load chart libraries", e);
         alert("Failed to load chart library.");
         return;
     }
@@ -89,7 +113,10 @@ const renderChart = async (exerciseName) => {
     const exerciseHistory = workouts.flatMap(w =>
         w.exercises
             .filter(ex => ex.exercise === exerciseName)
-            .map(ex => ({ date: w.date, weight: ex.weight }))
+            .map(ex => ({ 
+                x: new Date(w.date).getTime(), 
+                y: parseFloat(ex.weight) 
+            }))
     );
 
     if (chart) {
@@ -104,26 +131,41 @@ const renderChart = async (exerciseName) => {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-            y: {}
-        }
-    };
-
-    if (weights.length > 0) {
-        const minWeight = Math.min(...weights);
-        const maxWeight = Math.max(...weights);
-        // Use more padding (e.g., 10kg) to give breathing room as requested
-        const padding = 10;
-        
-        options.scales.y.min = 0;
-        options.scales.y.max = Math.ceil(maxWeight + padding);
-    }
-    
-    // Explicitly configure X-axis
-    options.scales.x = {
-        ticks: {
-            autoSkip: true,
-            maxRotation: 45,
-            minRotation: 45
+            y: {
+                beginAtZero: true,
+                grace: '10%' // Add some breathing room at the top
+            },
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'day',
+                    displayFormats: {
+                        day: 'dd.MM'
+                    },
+                    tooltipFormat: 'PP'
+                },
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            }
+        },
+        plugins: {
+            zoom: {
+                pan: {
+                    enabled: true,
+                    mode: 'x'
+                },
+                zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    pinch: {
+                        enabled: true
+                    },
+                    mode: 'x',
+                }
+            }
         }
     };
 
@@ -131,12 +173,15 @@ const renderChart = async (exerciseName) => {
     chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: exerciseHistory.map(h => new Date(h.date).toLocaleDateString()),
             datasets: [{
                 label: 'Weight (kg)',
-                data: weights,
+                data: exerciseHistory,
                 borderColor: 'rgba(75, 192, 192, 1)',
-                tension: 0.1
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: options

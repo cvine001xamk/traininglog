@@ -8,14 +8,15 @@ db.version(1).stores({
 });
 
 // Helper to calculate plate split
-export function calculatePlates(weight) {
-  if (weight <= 10) return null;
+export function calculatePlates(weight, barWeight = 10) {
+  if (weight <= barWeight) return null;
   
-  let weightPerSide = (weight - 10) / 2;
+  let weightPerSide = (weight - barWeight) / 2;
   if (weightPerSide < 0) weightPerSide = 0;
   
   return {
-    weightPerSide: weightPerSide.toFixed(2)
+    weightPerSide: weightPerSide.toFixed(2),
+    barWeight: barWeight
   };
 }
 
