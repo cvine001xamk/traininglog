@@ -10,6 +10,9 @@ let exercisesView;
 let chartTitle;
 let chart;
 let resetZoomBtn;
+let goalWeightInput;
+let saveGoalBtn;
+let currentChartExercise;
 
 export function initExercises() {
     exerciseList = document.getElementById('exercise-list');
@@ -20,11 +23,24 @@ export function initExercises() {
     exercisesView = document.getElementById('exercises');
     chartTitle = document.getElementById('chart-title');
     resetZoomBtn = document.getElementById('reset-zoom-btn');
+    goalWeightInput = document.getElementById('goal-weight-input');
+    saveGoalBtn = document.getElementById('save-goal-btn');
 
     // Initialize event listeners only once
     if (!initExercises.initialized) {
         resetZoomBtn.addEventListener('click', () => {
             if (chart) chart.resetZoom();
+        });
+
+        saveGoalBtn.addEventListener('click', async () => {
+            if (!currentChartExercise) return;
+            const goal = parseFloat(goalWeightInput.value);
+            const exerciseData = await db.exercises.get({ name: currentChartExercise });
+            if (exerciseData) {
+                await db.exercises.update(exerciseData.id, { goalWeight: isNaN(goal) ? null : goal });
+                await renderChart(currentChartExercise); // Re-render to update the line
+                alert("Goal saved!");
+            }
         });
 
         addNewExerciseForm.addEventListener('submit', async (e) => {
@@ -73,7 +89,7 @@ const renderExerciseManagementList = async () => {
     exercises.forEach(ex => {
         const item = document.createElement('article');
         item.classList.add('exercise-list-item');
-        const barWeight = ex.barWeight || 20; // Default to 20kg if not set
+        const barWeight = ex.barWeight || 10; // Default to 10kg if not set
         item.innerHTML = `
             <div>
                 <div class="exercise-info">
@@ -81,6 +97,7 @@ const renderExerciseManagementList = async () => {
                     <div class="bar-selection">
                         <label>Bar: </label>
                         <select class="bar-weight-select" data-id="${ex.id}">
+                            <option value="2" ${barWeight === 2 ? 'selected' : ''}>2 kg</option>
                             <option value="8" ${barWeight === 8 ? 'selected' : ''}>8 kg</option>
                             <option value="10" ${barWeight === 10 ? 'selected' : ''}>10 kg</option>
                             <option value="20" ${barWeight === 20 ? 'selected' : ''}>20 kg</option>
@@ -103,10 +120,18 @@ const renderChart = async (exerciseName) => {
         // Load time adapter and zoom plugin from CDN
         await loadScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js');
         await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js');
+        await loadScript('https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2/dist/chartjs-plugin-annotation.min.js');
     } catch (e) {
         console.error("Failed to load chart libraries", e);
         alert("Failed to load chart library.");
         return;
+    }
+
+    const exerciseData = await db.exercises.get({ name: exerciseName });
+    const goalWeight = exerciseData && exerciseData.goalWeight ? exerciseData.goalWeight : null;
+    currentChartExercise = exerciseName;
+    if (goalWeightInput) {
+        goalWeightInput.value = goalWeight || '';
     }
 
     const workouts = await db.workouts.orderBy('date').toArray();
@@ -151,6 +176,24 @@ const renderChart = async (exerciseName) => {
             }
         },
         plugins: {
+            annotation: {
+                annotations: goalWeight ? {
+                    goalLine: {
+                        type: 'line',
+                        yMin: goalWeight,
+                        yMax: goalWeight,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        label: {
+                            display: true,
+                            content: 'Goal',
+                            position: 'start',
+                            backgroundColor: 'rgba(255, 159, 64, 0.8)'
+                        }
+                    }
+                } : {}
+            },
             zoom: {
                 pan: {
                     enabled: true,

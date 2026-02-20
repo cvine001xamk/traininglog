@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
-      const barWeight = exerciseData ? (exerciseData.barWeight || 20) : 20;
+      const barWeight = exerciseData ? (exerciseData.barWeight || 10) : 10;
       const plates = calculatePlates(lastWeight, barWeight);
       let infoText = `Last: ${lastWeight}kg`;
       if (plates) {
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!exerciseName) return;
 
     const exerciseData = await db.exercises.get({ name: exerciseName });
-    const barWeight = exerciseData ? (exerciseData.barWeight || 20) : 20;
+    const barWeight = exerciseData ? (exerciseData.barWeight || 10) : 10;
 
     currentWorkout.push({
       exercise: exerciseName,
