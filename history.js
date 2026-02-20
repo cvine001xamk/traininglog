@@ -4,31 +4,38 @@ import { db, calculatePlates, formatDate } from './utils.js';
 let historyList;
 let importBtn;
 let exportBtn;
+let clearBtn;
 let fileInput;
 
 export function initHistory() {
   historyList = document.getElementById("history-list");
   importBtn = document.getElementById("import-csv-btn");
   exportBtn = document.getElementById("export-csv-btn");
+  clearBtn = document.getElementById("clear-history-btn");
   fileInput = document.getElementById("csv-file-input");
 
   // Initialize event listeners only once
   if (!initHistory.initialized) {
     exportBtn.addEventListener("click", exportToCSV);
     importBtn.addEventListener("click", () => fileInput.click());
+    clearBtn.addEventListener("click", async () => {
+      if (confirm("Are you sure you want to clear ALL workout history? This cannot be undone.")) {
+        await db.workouts.clear();
+        await renderHistory();
+      }
+    });
     fileInput.addEventListener("change", importFromCSV);
     initHistory.initialized = true;
   }
 }
 
 export async function renderHistory() {
-  const workouts = await db.workouts.orderBy("date").toArray();
+  const workouts = await db.workouts.orderBy("date").reverse().toArray();
   historyList.innerHTML =
     workouts.length === 0
       ? '<p class="text-center">No workouts logged yet.</p>'
       : "";
-  const reversedWorkouts = [...workouts].reverse();
-  reversedWorkouts.forEach((workout) => {
+  workouts.forEach((workout) => {
     historyList.appendChild(createWorkoutArticle(workout));
   });
 }

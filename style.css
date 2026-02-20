@@ -19,7 +19,7 @@ body {
   background-image: linear-gradient(to bottom, #050c38, #1b2062, #6700a3);
   color: var(--text-color);
   margin: 0;
-  padding: var(--spacing);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   min-height: 100vh;
   box-sizing: border-box;
   font-size: 14px; /* Slightly smaller base font */
@@ -48,7 +48,7 @@ h2 {
 .container {
   max-width: 100%; /* Full width on mobile */
   margin: 0 auto;
-  padding: 0;
+  padding: var(--spacing);
 }
 
 /* Header & Navigation */
@@ -58,26 +58,38 @@ header {
 
 nav {
   display: flex;
-  justify-content: center;
-  gap: 0.25rem;
+  justify-content: space-between;
+  gap: 0;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
+  background-color: rgba(255, 255, 255, 0.05); /* seamless bar */
+  border-radius: var(--border-radius);
+  overflow: hidden;
 }
 
 /* Buttons */
 button,
 .btn {
-  display: inline-block;
-  padding: 0.3rem 0.6rem; /* More compact buttons */
-  border: 1px solid transparent;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1; /* evenly spaced naturally or stretched */
+  padding: 0.75rem 0.5rem; /* Larger touch targets for mobile */
+  border: none;
   border-radius: var(--border-radius);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  transition: background-color 0.2s, color 0.2s;
   background-color: var(--primary-color);
   color: #ffffff;
+  min-height: 44px; /* Apple UI Guideline */
+}
+
+nav button {
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--secondary-color);
 }
 
 button:hover,
@@ -135,10 +147,11 @@ input[type="text"],
 input[type="number"],
 select {
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.75rem 0.5rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  font-size: 1rem; /* Keep input font size 16px to prevent zoom on iOS */
+  font-size: 16px; /* Keep input font size 16px to prevent zoom on iOS */
+  min-height: 44px;
   box-sizing: border-box;
   background-color: rgba(255, 255, 255, 0.1);
   color: white;
@@ -270,7 +283,7 @@ article header {
   height: 100vh;
   background-color: var(--background-color);
   z-index: 1000;
-  padding: 0.5rem;
+  padding: calc(0.5rem + env(safe-area-inset-top)) calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom)) calc(0.5rem + env(safe-area-inset-left));
   box-sizing: border-box;
   flex-direction: column;
 }

@@ -36,8 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
     viewToShow.button.classList.add("active");
   };
 
-  const showLogView = () =>
+  const showLogView = async () => {
     showView({ section: logWorkoutSection, button: logViewBtn });
+    await renderExerciseOptions();
+  };
   
   const showHistoryView = () => {
     showView({ section: historySection, button: historyViewBtn });
@@ -94,15 +96,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const workoutsWithExercise = await db.workouts
-      .orderBy("date")
-      .reverse()
-      .toArray();
-
     let lastWeight = null;
     let maxWeight = 0;
 
-    for (const workout of workoutsWithExercise) {
+    await db.workouts.orderBy("date").reverse().each((workout) => {
       const exercise = workout.exercises.find(
         (ex) => ex.exercise === exerciseName
       );
@@ -114,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
           maxWeight = exercise.weight;
         }
       }
-    }
+    });
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
@@ -205,11 +202,25 @@ document.addEventListener("DOMContentLoaded", () => {
             "ServiceWorker registration successful with scope: ",
             registration.scope
           );
+
+          // Check for updates manually
+          registration.update();
+
+          // If there's an updated worker waiting, we could notify the user,
+          // but since we added skipWaiting() in sw.js, it will activate immediately.
         },
         (err) => {
           console.log("ServiceWorker registration failed: ", err);
         }
       );
+    });
+
+    // Reload the page when a new service worker takes over
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
   }
 });
