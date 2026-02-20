@@ -109,6 +109,14 @@ button.secondary,
   color: #ffffff;
 }
 
+button:disabled,
+.btn:disabled,
+button[disabled],
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .icon-btn {
   background: none;
   border: none;

@@ -56,21 +56,44 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- RENDER FUNCTIONS ---
   const renderCurrentWorkout = () => {
     currentWorkoutList.innerHTML = "";
-    saveWorkoutBtn.hidden = currentWorkout.length === 0;
+    saveWorkoutBtn.disabled = currentWorkout.length === 0;
 
-    currentWorkout.forEach((exercise) => {
+    currentWorkout.forEach((exercise, index) => {
       const item = document.createElement("article");
+      item.className = "current-workout-item";
+      
+      const contentDiv = document.createElement("div");
+      contentDiv.style.flex = "1";
       const plates = calculatePlates(exercise.weight, exercise.barWeight);
       
       if (plates) {
-        item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${
           exercise.weight
         } kg (${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar) &times; ${
           exercise.sets
         } &times; ${exercise.reps}</p>`;
       } else {
-        item.innerHTML = `<p><strong>${exercise.exercise}</strong></p><p>${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       }
+      
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "icon-btn";
+      editBtn.setAttribute("aria-label", "Edit exercise");
+      editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
+      editBtn.onclick = () => {
+        document.getElementById("exercise").value = exercise.exercise;
+        document.getElementById("weight").value = exercise.weight;
+        document.getElementById("sets").value = exercise.sets;
+        document.getElementById("reps").value = exercise.reps;
+        currentWorkout.splice(index, 1);
+        renderCurrentWorkout();
+        document.getElementById("weight").focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      item.appendChild(contentDiv);
+      item.appendChild(editBtn);
       currentWorkoutList.appendChild(item);
     });
   };
