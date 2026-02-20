@@ -28,6 +28,12 @@
 
       <main>
         <section id="log-workout">
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+            <button id="timer-badge" class="badge-timer" type="button" aria-label="Add 1 minute timer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="timer-display">00:00</span>
+            </button>
+          </div>
           <form id="add-exercise-form">
             <div class="form-group">
               <label for="exercise">Exercise</label>

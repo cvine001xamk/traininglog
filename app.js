@@ -19,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveWorkoutBtn = document.getElementById("save-workout-btn");
   const exerciseSelect = document.getElementById("exercise");
   const lastWeightInfo = document.getElementById("last-weight-info");
+  const timerBadge = document.getElementById("timer-badge");
+  const timerDisplay = document.getElementById("timer-display");
 
   // --- DATA ---
   let currentWorkout = [];
@@ -129,6 +131,74 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // --- EVENT LISTENERS ---
+  // --- TIMER LOGIC ---
+  let timerInterval = null;
+  let timeRemaining = 0;
+  let wakeLock = null;
+
+  const requestWakeLock = async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+      }
+    } catch (err) {
+      console.log(`Wake Lock error: ${err.name}, ${err.message}`);
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLock !== null) {
+      try { await wakeLock.release(); } catch(e) {}
+      wakeLock = null;
+    }
+  };
+
+  const updateTimerDisplay = () => {
+    if (timeRemaining <= 0) {
+      timeRemaining = 0;
+      timerDisplay.textContent = "00:00";
+      timerBadge.classList.remove("active");
+      clearInterval(timerInterval);
+      timerInterval = null;
+      releaseWakeLock();
+      if ("vibrate" in navigator) {
+          navigator.vibrate([300, 150, 300, 150, 300]);
+      }
+      return;
+    }
+    const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+    const s = (timeRemaining % 60).toString().padStart(2, '0');
+    timerDisplay.textContent = `${m}:${s}`;
+  };
+
+  timerBadge.addEventListener("click", () => {
+    timeRemaining += 60;
+    if (!timerInterval) {
+      timerBadge.classList.add("active");
+      requestWakeLock();
+      updateTimerDisplay(); // immediate update
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+      }, 1000);
+    } else {
+      updateTimerDisplay();
+    }
+  });
+
+  // Long press / right click to clear timer
+  timerBadge.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    timeRemaining = 0;
+    updateTimerDisplay();
+  });
+
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible' && timeRemaining > 0) {
+      await requestWakeLock();
+    }
+  });
+
   logViewBtn.addEventListener("click", showLogView);
   historyViewBtn.addEventListener("click", showHistoryView);
   exercisesViewBtn.addEventListener("click", showExercisesView);
