@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="https://cvine001xamk.github.io/traininglog/" />
+    <!-- Uncomment before deploying: <base href="https://cvine001xamk.github.io/traininglog/" /> -->
     <title>Training Log</title>
     <link rel="stylesheet" href="./style.css?v=10" />
     <link rel="manifest" href="./manifest.json" />
@@ -28,9 +28,34 @@
 
       <main>
         <section id="log-workout">
-          <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
-            <button id="timer-badge" class="badge-timer" type="button" aria-label="Add 1 minute timer">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-bottom;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <div
+            style="
+              display: flex;
+              justify-content: flex-end;
+              margin-bottom: 0.5rem;
+            "
+          >
+            <button
+              id="timer-badge"
+              class="badge-timer"
+              type="button"
+              aria-label="Add 1 minute timer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="margin-right: 4px; vertical-align: text-bottom"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
               <span id="timer-display">00:00</span>
             </button>
           </div>
@@ -42,8 +67,25 @@
               </select>
             </div>
             <div class="grid">
-              <div class="form-group">
-                <label for="weight">Weight (kg)</label>
+              <div
+                class="form-group"
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: flex-end;
+                "
+              >
+                <label
+                  for="weight"
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    margin-bottom: 0.25rem;
+                  "
+                >
+                  <span>Weight (kg)</span>
+                </label>
                 <small id="last-weight-info"></small>
                 <input
                   type="number"
@@ -52,7 +94,70 @@
                   step="any"
                   placeholder="e.g., 100"
                   required
+                  style="margin-top: auto"
                 />
+              </div>
+              <div
+                class="form-group"
+                style="display: flex; flex-direction: column; height: 100%"
+              >
+                <div
+                  id="plate-visualizer"
+                  style="
+                    display: none;
+                    align-items: center;
+                    justify-content: flex-start;
+                    flex: 1;
+                    width: 100%;
+                    max-height: 74px;
+                    margin-top: auto;
+                    border-radius: 4px;
+                    background: transparent;
+                    overflow: hidden;
+                    position: relative;
+                  "
+                >
+                  <!-- Barbell sleeve -->
+                  <div
+                    style="
+                      position: absolute;
+                      left: 0;
+                      right: 0;
+                      height: 8px;
+                      background: #666;
+                      border-radius: 2px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                    "
+                  ></div>
+                  <!-- Collar -->
+                  <div
+                    style="
+                      position: absolute;
+                      left: 4px;
+                      height: 16px;
+                      width: 6px;
+                      background: #444;
+                      border-radius: 2px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      z-index: 10;
+                    "
+                  ></div>
+                  <div
+                    id="plates-container"
+                    style="
+                      display: flex;
+                      gap: 1px;
+                      align-items: center;
+                      margin-left: 12px;
+                      position: relative;
+                      z-index: 20;
+                      height: 100%;
+                      padding: 4px 0;
+                    "
+                  ></div>
+                </div>
               </div>
               <div class="form-group">
                 <label for="sets">Sets</label>
@@ -166,31 +271,81 @@
         </section>
 
         <section id="exercises" hidden>
-          <h2>Manage Exercises</h2>
-          <div id="exercise-list">
-            <!-- Exercise list will be populated by JS -->
-          </div>
-          <form id="add-new-exercise-form">
-            <div class="form-group">
-              <label for="new-exercise-name">Add New Exercise</label>
-              <input
-                type="text"
-                id="new-exercise-name"
-                placeholder="e.g., Bicep Curls"
-                required
-              />
+          <details style="margin-bottom: 1rem" class="custom-details">
+            <summary><h2>Manage Plates</h2></summary>
+            <div id="plate-list" style="margin-top: 1rem">
+              <!-- Plate list will be populated by JS -->
             </div>
-            <div class="form-group">
-              <label for="new-exercise-bar-weight">Default Bar Weight</label>
-              <select id="new-exercise-bar-weight">
-                <option value="2">2 kg</option>
-                <option value="8">8 kg</option>
-                <option value="10" selected>10 kg</option>
-                <option value="20">20 kg</option>
-              </select>
+            <form id="add-new-plate-form">
+              <div class="grid">
+                <div class="form-group">
+                  <label for="new-plate-weight">Plate Weight (kg)</label>
+                  <input
+                    type="number"
+                    id="new-plate-weight"
+                    min="0"
+                    step="any"
+                    placeholder="e.g., 20"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="new-plate-amount">Amount</label>
+                  <input
+                    type="number"
+                    id="new-plate-amount"
+                    min="1"
+                    step="1"
+                    placeholder="e.g., 2"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="new-plate-color">Color</label>
+                  <input
+                    type="color"
+                    id="new-plate-color"
+                    value="#cfcfcf"
+                    style="
+                      padding: 0.1rem;
+                      min-height: 44px;
+                      width: 100%;
+                      cursor: pointer;
+                    "
+                  />
+                </div>
+              </div>
+              <button type="submit">Add Plates</button>
+            </form>
+          </details>
+
+          <details class="custom-details" open>
+            <summary><h2>Manage Exercises</h2></summary>
+            <div id="exercise-list" style="margin-top: 1rem">
+              <!-- Exercise list will be populated by JS -->
             </div>
-            <button type="submit">Add Exercise Type</button>
-          </form>
+            <form id="add-new-exercise-form">
+              <div class="form-group">
+                <label for="new-exercise-name">Add New Exercise</label>
+                <input
+                  type="text"
+                  id="new-exercise-name"
+                  placeholder="e.g., Bicep Curls"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="new-exercise-bar-weight">Default Bar Weight</label>
+                <select id="new-exercise-bar-weight">
+                  <option value="2">2 kg</option>
+                  <option value="8">8 kg</option>
+                  <option value="10" selected>10 kg</option>
+                  <option value="20">20 kg</option>
+                </select>
+              </div>
+              <button type="submit">Add Exercise Type</button>
+            </form>
+          </details>
         </section>
 
         <section id="chart-view" hidden>
@@ -198,13 +353,38 @@
             <button id="back-to-exercises-btn">Back to Exercises</button>
             <button id="reset-zoom-btn" class="secondary">Reset Zoom</button>
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; justify-content: center;">
-            <label for="goal-weight-input" style="margin: 0;">Goal (kg):</label>
-            <input type="number" id="goal-weight-input" min="0" step="any" style="width: 80px; min-height: 36px; padding: 0.25rem 0.5rem;" />
-            <button id="save-goal-btn" class="secondary" style="margin: 0; min-height: 36px; padding: 0.25rem 0.75rem; flex: 0 1 auto;">Save</button>
+          <div
+            style="
+              display: flex;
+              gap: 0.5rem;
+              align-items: center;
+              margin-bottom: 0.5rem;
+              justify-content: center;
+            "
+          >
+            <label for="goal-weight-input" style="margin: 0">Goal (kg):</label>
+            <input
+              type="number"
+              id="goal-weight-input"
+              min="0"
+              step="any"
+              style="width: 80px; min-height: 36px; padding: 0.25rem 0.5rem"
+            />
+            <button
+              id="save-goal-btn"
+              class="secondary"
+              style="
+                margin: 0;
+                min-height: 36px;
+                padding: 0.25rem 0.75rem;
+                flex: 0 1 auto;
+              "
+            >
+              Save
+            </button>
           </div>
           <h2 id="chart-title"></h2>
-          <div style="position: relative; flex-grow: 1; min-height: 0;">
+          <div style="position: relative; flex-grow: 1; min-height: 0">
             <canvas id="exercise-chart"></canvas>
           </div>
         </section>

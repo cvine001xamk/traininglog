@@ -7,8 +7,8 @@
   --text-color: #ffffff;
   --border-color: #6700a3;
   --danger-color: #dc3545;
-  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    sans-serif;
+  --font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --border-radius: 0.25rem; /* Reduced radius */
   --spacing: 0.5rem; /* Reduced global spacing */
 }
@@ -19,7 +19,8 @@ body {
   background-image: linear-gradient(to bottom, #050c38, #1b2062, #6700a3);
   color: var(--text-color);
   margin: 0;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
   min-height: 100vh;
   box-sizing: border-box;
   font-size: 14px; /* Slightly smaller base font */
@@ -80,7 +81,9 @@ button,
   font-weight: 600;
   text-align: center;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
   background-color: var(--primary-color);
   color: #ffffff;
   min-height: 44px; /* Apple UI Guideline */
@@ -158,9 +161,15 @@ button[disabled],
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(51, 153, 255, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(51, 153, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(51, 153, 255, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(51, 153, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(51, 153, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(51, 153, 255, 0);
+  }
 }
 
 /* Forms */
@@ -174,7 +183,9 @@ form button[type="submit"],
   padding: 1rem;
   font-size: 1.1rem;
   margin-top: 0.5rem;
-  border-radius: calc(var(--border-radius) + 4px); /* slightly rounder for primary actions */
+  border-radius: calc(
+    var(--border-radius) + 4px
+  ); /* slightly rounder for primary actions */
 }
 
 .form-group {
@@ -208,10 +219,6 @@ select {
   gap: 0.5rem;
 }
 
-.grid > .form-group:first-child {
-  grid-column: span 2; /* Weight takes full width */
-}
-
 /* Cards / Articles */
 article {
   background-color: var(--surface-color);
@@ -242,12 +249,50 @@ article header {
   font-size: 0.9rem;
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 0.25rem;
 }
 
 #history-list .exercises-container div:last-child {
   border-bottom: none;
+}
+
+/* Details and Accordions */
+.custom-details {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.custom-details summary {
+  cursor: pointer;
+  list-style: none; /* Hide default arrow in most browsers */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-details summary::-webkit-details-marker {
+  display: none; /* Hide default arrow in Safari/Chrome */
+}
+
+.custom-details summary::after {
+  content: "▼";
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  transition: transform 0.2s;
+}
+
+.custom-details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.custom-details summary h2 {
+  margin: 0;
+  text-align: left;
+  font-size: 1.1rem;
 }
 
 #exercise-list .exercise-list-item {
@@ -328,7 +373,10 @@ article header {
   height: 100vh;
   background-color: var(--background-color);
   z-index: 1000;
-  padding: calc(0.5rem + env(safe-area-inset-top)) calc(0.5rem + env(safe-area-inset-right)) calc(0.5rem + env(safe-area-inset-bottom)) calc(0.5rem + env(safe-area-inset-left));
+  padding: calc(0.5rem + env(safe-area-inset-top))
+    calc(0.5rem + env(safe-area-inset-right))
+    calc(0.5rem + env(safe-area-inset-bottom))
+    calc(0.5rem + env(safe-area-inset-left));
   box-sizing: border-box;
   flex-direction: column;
 }
@@ -344,7 +392,8 @@ article header {
   margin-bottom: 0.5rem;
 }
 
-#back-to-exercises-btn, #reset-zoom-btn {
+#back-to-exercises-btn,
+#reset-zoom-btn {
   margin: 0;
   align-self: flex-start;
 }
@@ -361,18 +410,18 @@ article header {
     max-width: 800px;
     padding: var(--spacing);
   }
-  
+
   .grid {
-    grid-template-columns: repeat(3, 1fr); /* Back to 3 columns */
-  }
-  
-  .grid > .form-group:first-child {
-    grid-column: auto; /* Reset span */
+    grid-template-columns: repeat(
+      4,
+      1fr
+    ); /* 4 columns since we have weight, plates, sets, reps */
   }
 }
 
 @media (max-width: 600px) {
-  button, .btn {
+  button,
+  .btn {
     padding: 0.5rem 1rem; /* Larger touch targets */
     font-size: 1rem;
   }
