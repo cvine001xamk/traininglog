@@ -41,33 +41,81 @@ export async function calculatePlates(weight, barWeight = 10) {
     }))
     .filter((p) => p.pairs > 0);
 
-  const platesNeeded = [];
-  let remainingWeightPerSide = weightPerSide;
+  const targetInt = Math.round(weightPerSide * 1000);
 
-  if (usablePlates.length > 0) {
-    for (const plate of usablePlates) {
-      if (remainingWeightPerSide <= 0) break;
+  const platesInt = usablePlates
+    .map((p) => ({
+      ...p,
+      weightInt: Math.round(p.weight * 1000),
+    }))
+    .sort((a, b) => b.weightInt - a.weightInt);
 
-      const pairsNeeded = Math.floor(remainingWeightPerSide / plate.weight);
-      const pairsToUse = Math.min(pairsNeeded, plate.pairs);
+  let bestSumInt = -1;
+  let minPlates = Infinity;
+  let bestPlates = [];
 
-      if (pairsToUse > 0) {
-        for (let i = 0; i < pairsToUse; i++) {
-          platesNeeded.push({ weight: plate.weight, color: plate.color });
-        }
-        remainingWeightPerSide -= plate.weight * pairsToUse;
-      }
+  function findBest(index, currentSumInt, currentPlatesCount, currentPlates) {
+    if (currentSumInt > bestSumInt) {
+      bestSumInt = currentSumInt;
+      minPlates = currentPlatesCount;
+      bestPlates = [...currentPlates];
+    } else if (currentSumInt === bestSumInt && currentPlatesCount < minPlates) {
+      minPlates = currentPlatesCount;
+      bestPlates = [...currentPlates];
     }
 
-    // Check if we couldn't match exactly based on plates
-    // To allow for micro-loading not tracked in DB, we'll still consider valid if remaining is very small
-    // But if we cannot construct the weight without plates, we'll return what we could and note the difference
+    if (index >= platesInt.length) return;
+
+    const plate = platesInt[index];
+
+    let maxRemainingSum = 0;
+    for (let j = index; j < platesInt.length; j++) {
+      maxRemainingSum += platesInt[j].pairs * platesInt[j].weightInt;
+    }
+
+    // Prune branch if we mathematically cannot exceed the best sum found so far
+    if (currentSumInt + maxRemainingSum < bestSumInt) {
+      return;
+    }
+
+    for (let i = plate.pairs; i >= 0; i--) {
+      const nextSumInt = currentSumInt + i * plate.weightInt;
+      if (nextSumInt <= targetInt) {
+        // Prune paths that would definitely use more plates than an ideal match we already found
+        if (bestSumInt === targetInt) {
+          if (nextSumInt === targetInt && currentPlatesCount + i >= minPlates)
+            continue;
+          if (nextSumInt < targetInt && currentPlatesCount + i >= minPlates - 1)
+            continue;
+        }
+
+        let added = [];
+        if (i > 0) {
+          for (let k = 0; k < i; k++) {
+            added.push({ weight: plate.weight, color: plate.color });
+          }
+        }
+        findBest(
+          index + 1,
+          nextSumInt,
+          currentPlatesCount + i,
+          currentPlates.concat(added),
+        );
+      }
+    }
   }
+
+  if (usablePlates.length > 0) {
+    findBest(0, 0, 0, []);
+  }
+
+  const remainingWeightPerSide =
+    bestSumInt >= 0 ? (targetInt - bestSumInt) / 1000 : weightPerSide;
 
   return {
     weightPerSide: weightPerSide.toFixed(2),
     barWeight: barWeight,
-    plates: platesNeeded,
+    plates: bestPlates,
     remainingWeightPerSide:
       remainingWeightPerSide > 0 ? remainingWeightPerSide : 0,
   };
