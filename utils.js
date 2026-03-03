@@ -7,6 +7,8 @@ db.version(1).stores({
   workouts: "++id,date",
 });
 db.version(2).stores({
+  exercises: "++id,name",
+  workouts: "++id,date",
   plates: "++id,weight,amount",
 });
 
@@ -144,4 +146,93 @@ export function loadScript(src) {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+}
+
+// Styled dialog helpers (replace native alert/confirm)
+export function showAlert(message) {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById("app-dialog");
+    const msgEl = document.getElementById("dialog-message");
+    const confirmBtn = document.getElementById("dialog-confirm-btn");
+    const cancelBtn = document.getElementById("dialog-cancel-btn");
+
+    msgEl.textContent = message;
+    cancelBtn.style.display = "none";
+    confirmBtn.textContent = "OK";
+
+    const cleanup = () => {
+      dialog.close();
+      confirmBtn.removeEventListener("click", onConfirm);
+      dialog.removeEventListener("click", onBackdrop);
+    };
+
+    const onConfirm = () => { cleanup(); resolve(); };
+    const onBackdrop = (e) => { if (e.target === dialog) { cleanup(); resolve(); } };
+
+    confirmBtn.addEventListener("click", onConfirm);
+    dialog.addEventListener("click", onBackdrop);
+
+    dialog.showModal();
+  });
+}
+
+export function showConfirm(message) {
+  return new Promise((resolve) => {
+    const dialog = document.getElementById("app-dialog");
+    const msgEl = document.getElementById("dialog-message");
+    const confirmBtn = document.getElementById("dialog-confirm-btn");
+    const cancelBtn = document.getElementById("dialog-cancel-btn");
+
+    msgEl.textContent = message;
+    cancelBtn.style.display = "";
+    confirmBtn.textContent = "Confirm";
+
+    const cleanup = () => {
+      dialog.close();
+      confirmBtn.removeEventListener("click", onConfirm);
+      cancelBtn.removeEventListener("click", onCancel);
+      dialog.removeEventListener("click", onBackdrop);
+    };
+
+    const onConfirm = () => { cleanup(); resolve(true); };
+    const onCancel = () => { cleanup(); resolve(false); };
+    const onBackdrop = (e) => { if (e.target === dialog) { cleanup(); resolve(false); } };
+
+    confirmBtn.addEventListener("click", onConfirm);
+    cancelBtn.addEventListener("click", onCancel);
+    dialog.addEventListener("click", onBackdrop);
+
+    dialog.showModal();
+  });
+}
+
+// RFC 4180-aware CSV line parser (handles quoted fields with commas)
+export function parseCSVLine(line) {
+  const fields = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ",") {
+        fields.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+  }
+  fields.push(current);
+  return fields;
 }

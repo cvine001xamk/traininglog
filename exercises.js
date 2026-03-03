@@ -1,5 +1,5 @@
 // exercises.js
-import { db, loadScript } from "./utils.js";
+import { db, loadScript, showAlert, showConfirm } from "./utils.js";
 
 let exerciseList;
 let addNewExerciseForm;
@@ -15,6 +15,10 @@ let saveGoalBtn;
 let currentChartExercise;
 let plateList;
 let addNewPlateForm;
+let chartGoalToggle;
+let chartGoalRow;
+let rangeButtons;
+let currentTimeRange = "ALL";
 
 export function initExercises() {
   exerciseList = document.getElementById("exercise-list");
@@ -29,11 +33,27 @@ export function initExercises() {
   saveGoalBtn = document.getElementById("save-goal-btn");
   plateList = document.getElementById("plate-list");
   addNewPlateForm = document.getElementById("add-new-plate-form");
+  chartGoalToggle = document.getElementById("chart-goal-toggle");
+  chartGoalRow = document.getElementById("chart-goal-row");
+  rangeButtons = document.querySelectorAll(".range-btn");
 
   // Initialize event listeners only once
   if (!initExercises.initialized) {
     resetZoomBtn.addEventListener("click", () => {
       if (chart) chart.resetZoom();
+    });
+
+    chartGoalToggle.addEventListener("click", () => {
+      chartGoalRow.classList.toggle("hidden");
+    });
+
+    rangeButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        rangeButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentTimeRange = btn.dataset.range;
+        if (currentChartExercise) renderChart(currentChartExercise);
+      });
     });
 
     saveGoalBtn.addEventListener("click", async () => {
@@ -46,8 +66,8 @@ export function initExercises() {
         await db.exercises.update(exerciseData.id, {
           goalWeight: isNaN(goal) ? null : goal,
         });
-        await renderChart(currentChartExercise); // Re-render to update the line
-        alert("Goal saved!");
+        await renderChart(currentChartExercise);
+        await showAlert("Goal saved!");
       }
     });
 
@@ -61,7 +81,7 @@ export function initExercises() {
         await db.exercises.add({ name: newExerciseName, barWeight: barWeight });
         await renderExerciseManagementList();
         newExerciseNameInput.value = "";
-        alert("Exercise added! Go to 'Log Workout' to see it in the list.");
+        await showAlert("Exercise added! Go to 'Log Workout' to see it in the list.");
       }
     });
 
@@ -69,6 +89,15 @@ export function initExercises() {
       if (e.target.classList.contains("view-history-btn")) {
         const exerciseName = e.target.dataset.name;
         await renderChart(exerciseName);
+      }
+      const deleteBtn = e.target.closest(".delete-exercise-btn");
+      if (deleteBtn) {
+        const id = parseInt(deleteBtn.dataset.id);
+        const confirmed = await showConfirm("Delete this exercise? This won't remove it from past workouts.");
+        if (confirmed) {
+          await db.exercises.delete(id);
+          await renderExerciseManagementList();
+        }
       }
     });
 
@@ -170,26 +199,56 @@ const renderExerciseManagementList = async () => {
   exercises.forEach((ex) => {
     const item = document.createElement("article");
     item.classList.add("exercise-list-item");
-    const barWeight = ex.barWeight || 10; // Default to 10kg if not set
-    item.innerHTML = `
-            <div>
-                <div class="exercise-info">
-                    <strong>${ex.name}</strong>
-                    <div class="bar-selection">
-                        <label>Bar: </label>
-                        <select class="bar-weight-select" data-id="${ex.id}">
-                            <option value="2" ${barWeight === 2 ? "selected" : ""}>2 kg</option>
-                            <option value="8" ${barWeight === 8 ? "selected" : ""}>8 kg</option>
-                            <option value="10" ${barWeight === 10 ? "selected" : ""}>10 kg</option>
-                            <option value="20" ${barWeight === 20 ? "selected" : ""}>20 kg</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="button-group">
-                    <button class="btn view-history-btn" data-name="${ex.name}">View History</button>
-                </div>
-            </div>
-        `;
+    const barWeight = ex.barWeight || 10;
+
+    const wrapper = document.createElement("div");
+
+    const infoDiv = document.createElement("div");
+    infoDiv.className = "exercise-info";
+
+    const nameEl = document.createElement("strong");
+    nameEl.textContent = ex.name; // Safe — no innerHTML
+    infoDiv.appendChild(nameEl);
+
+    const barDiv = document.createElement("div");
+    barDiv.className = "bar-selection";
+
+    const barLabel = document.createElement("label");
+    barLabel.textContent = "Bar: ";
+    barDiv.appendChild(barLabel);
+
+    const barSelect = document.createElement("select");
+    barSelect.className = "bar-weight-select";
+    barSelect.dataset.id = ex.id;
+    [2, 8, 10, 20].forEach((w) => {
+      const opt = document.createElement("option");
+      opt.value = w;
+      opt.textContent = `${w} kg`;
+      if (barWeight === w) opt.selected = true;
+      barSelect.appendChild(opt);
+    });
+    barDiv.appendChild(barSelect);
+    infoDiv.appendChild(barDiv);
+    wrapper.appendChild(infoDiv);
+
+    const buttonGroup = document.createElement("div");
+    buttonGroup.className = "button-group";
+
+    const viewBtn = document.createElement("button");
+    viewBtn.className = "btn view-history-btn";
+    viewBtn.dataset.name = ex.name;
+    viewBtn.textContent = "View History";
+    buttonGroup.appendChild(viewBtn);
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "icon-btn delete-btn delete-exercise-btn";
+    deleteBtn.dataset.id = ex.id;
+    deleteBtn.setAttribute("aria-label", "Delete exercise");
+    deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+    buttonGroup.appendChild(deleteBtn);
+
+    wrapper.appendChild(buttonGroup);
+    item.appendChild(wrapper);
     exerciseList.appendChild(item);
   });
 };
@@ -223,7 +282,7 @@ const renderChart = async (exerciseName) => {
   }
 
   const workouts = await db.workouts.orderBy("date").toArray();
-  const exerciseHistory = workouts.flatMap((w) =>
+  let exerciseHistory = workouts.flatMap((w) =>
     w.exercises
       .filter((ex) => ex.exercise === exerciseName)
       .map((ex) => ({
@@ -232,13 +291,24 @@ const renderChart = async (exerciseName) => {
       })),
   );
 
+  // Apply time range filter
+  if (currentTimeRange !== "ALL") {
+    const now = new Date();
+    let cutoff = new Date();
+    if (currentTimeRange === "1M") cutoff.setMonth(now.getMonth() - 1);
+    else if (currentTimeRange === "3M") cutoff.setMonth(now.getMonth() - 3);
+    else if (currentTimeRange === "6M") cutoff.setMonth(now.getMonth() - 6);
+    else if (currentTimeRange === "1Y") cutoff.setFullYear(now.getFullYear() - 1);
+    
+    const cutoffTime = cutoff.getTime();
+    exerciseHistory = exerciseHistory.filter(d => d.x >= cutoffTime);
+  }
+
   if (chart) {
     chart.destroy();
   }
 
   chartTitle.textContent = `${exerciseName} - Weight History`;
-
-  const weights = exerciseHistory.map((h) => h.weight);
 
   const options = {
     responsive: true,
@@ -246,21 +316,29 @@ const renderChart = async (exerciseName) => {
     scales: {
       y: {
         beginAtZero: true,
-        grace: "10%", // Add some breathing room at the top
+        grace: "10%",
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+        ticks: {
+          color: "#99aab5",
+        }
       },
       x: {
         type: "time",
         time: {
           unit: "day",
           displayFormats: {
-            day: "dd.MM",
+            day: "dd.MM.yy",
           },
           tooltipFormat: "PP",
         },
-        title: {
-          display: true,
-          text: "Date",
+        grid: {
+          color: "rgba(255, 255, 255, 0.1)",
         },
+        ticks: {
+          color: "#99aab5",
+        }
       },
     },
     plugins: {
@@ -288,6 +366,7 @@ const renderChart = async (exerciseName) => {
         pan: {
           enabled: true,
           mode: "x",
+          threshold: 5,
         },
         zoom: {
           wheel: {
@@ -310,12 +389,13 @@ const renderChart = async (exerciseName) => {
         {
           label: "Weight (kg)",
           data: exerciseHistory,
-          borderColor: "rgba(75, 192, 192, 1)",
-          backgroundColor: "rgba(75, 192, 192, 0.2)",
-          tension: 0.1,
+          borderColor: "#3399ff",
+          backgroundColor: "rgba(51, 153, 255, 0.2)",
+          tension: 0.2,
           fill: true,
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: 6,
+          pointHoverRadius: 10,
+          borderWidth: 3,
         },
       ],
     },

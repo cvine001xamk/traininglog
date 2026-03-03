@@ -1,5 +1,5 @@
 // history.js
-import { db, calculatePlates, formatDate } from './utils.js';
+import { db, calculatePlates, formatDate, showConfirm, parseCSVLine } from './utils.js';
 
 let historyList;
 let importBtn;
@@ -19,7 +19,8 @@ export function initHistory() {
     exportBtn.addEventListener("click", exportToCSV);
     importBtn.addEventListener("click", () => fileInput.click());
     clearBtn.addEventListener("click", async () => {
-      if (confirm("Are you sure you want to clear ALL workout history? This cannot be undone.")) {
+      const confirmed = await showConfirm("Are you sure you want to clear ALL workout history? This cannot be undone.");
+      if (confirmed) {
         await db.workouts.clear();
         await renderHistory();
       }
@@ -64,7 +65,8 @@ const createWorkoutArticle = (workout) => {
   deleteBtn.setAttribute("aria-label", "Delete Workout");
   deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
   deleteBtn.onclick = async () => {
-    if (confirm("Are you sure you want to delete this workout?")) {
+    const confirmed = await showConfirm("Are you sure you want to delete this workout?");
+    if (confirmed) {
       await db.workouts.delete(workout.id);
       await renderHistory();
     }
@@ -153,11 +155,19 @@ const exportToCSV = async () => {
   const workouts = await db.workouts.orderBy("date").toArray();
   if (workouts.length === 0) return;
 
+  const escapeCSV = (field) => {
+    const str = String(field);
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  };
+
   let csvContent = "Date,Exercise,Weight,Sets,Reps\n";
   workouts.forEach((workout) => {
     const date = new Date(workout.date).toISOString().split("T")[0];
     workout.exercises.forEach((ex) => {
-      const row = `${date},${ex.exercise},${ex.weight},${ex.sets},${ex.reps}\n`;
+      const row = `${date},${escapeCSV(ex.exercise)},${ex.weight},${ex.sets},${ex.reps}\n`;
       csvContent += row;
     });
   });
@@ -179,7 +189,7 @@ const importFromCSV = () => {
   const reader = new FileReader();
   reader.onload = async (event) => {
     const csv = event.target.result;
-    const lines = csv.split("\n").filter((line) => line);
+    const lines = csv.split("\n").filter((line) => line.trim());
     if (lines.length <= 1) return;
 
     const newWorkouts = {};
@@ -188,7 +198,9 @@ const importFromCSV = () => {
     );
 
     for (let i = 1; i < lines.length; i++) {
-      const [date, exercise, weight, sets, reps] = lines[i].split(",");
+      const fields = parseCSVLine(lines[i]);
+      if (fields.length < 5) continue;
+      const [date, exercise, weight, sets, reps] = fields;
       if (date && exercise && weight && sets && reps) {
         if (!newWorkouts[date]) {
           newWorkouts[date] = {

@@ -24,6 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const platesContainer = document.getElementById("plates-container");
   const timerBadge = document.getElementById("timer-badge");
   const timerDisplay = document.getElementById("timer-display");
+  const workoutBadge = document.getElementById("workout-badge");
+  const currentWorkoutSection = document.getElementById("current-workout-section");
 
   // --- DATA ---
   let currentWorkout = [];
@@ -56,10 +58,23 @@ document.addEventListener("DOMContentLoaded", () => {
     manageExercises();
   };
 
+  const updateWorkoutBadge = () => {
+    const count = currentWorkout.length;
+    if (count > 0) {
+      workoutBadge.textContent = count;
+      workoutBadge.classList.remove("hidden");
+    } else {
+      workoutBadge.classList.add("hidden");
+    }
+  };
+
   // --- RENDER FUNCTIONS ---
   const renderCurrentWorkout = async () => {
     currentWorkoutList.innerHTML = "";
-    saveWorkoutBtn.disabled = currentWorkout.length === 0;
+    const hasWorkout = currentWorkout.length > 0;
+    saveWorkoutBtn.disabled = !hasWorkout;
+    currentWorkoutSection.classList.toggle("hidden", !hasWorkout);
+    updateWorkoutBadge();
 
     for (let i = 0; i < currentWorkout.length; i++) {
       const exercise = currentWorkout[i];
@@ -242,6 +257,21 @@ document.addEventListener("DOMContentLoaded", () => {
   historyViewBtn.addEventListener("click", showHistoryView);
   exercisesViewBtn.addEventListener("click", showExercisesView);
 
+  const getContrastYIQ = (hex) => {
+    if (
+      !hex ||
+      typeof hex !== "string" ||
+      hex.length !== 7 ||
+      !hex.startsWith("#")
+    )
+      return "#000";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 128 ? "#000" : "#fff";
+  };
+
   const getPlateColor = (weight) => {
     if (weight >= 25) return "#ff0000"; // Red
     if (weight >= 20) return "#0000ff"; // Blue
@@ -285,21 +315,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const plateEl = document.createElement("div");
       const plateColor = plateItem.color || getPlateColor(plateWeight);
       const plateHeight = getPlateHeight(plateWeight);
-      const getContrastYIQ = (hex) => {
-        if (
-          !hex ||
-          typeof hex !== "string" ||
-          hex.length !== 7 ||
-          !hex.startsWith("#")
-        )
-          return "#000";
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-        return yiq >= 128 ? "#000" : "#fff";
-      };
-
       const textColor = getContrastYIQ(plateColor);
       const textShadow =
         textColor === "#000"
@@ -350,9 +365,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentWorkout.push({
       exercise: exerciseName,
-      weight: document.getElementById("weight").value,
-      sets: document.getElementById("sets").value,
-      reps: document.getElementById("reps").value,
+      weight: parseFloat(document.getElementById("weight").value),
+      sets: parseInt(document.getElementById("sets").value, 10),
+      reps: parseInt(document.getElementById("reps").value, 10),
       barWeight: barWeight,
     });
     await renderCurrentWorkout();
@@ -393,6 +408,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initExercises();
 
     await renderExerciseOptions();
+    await renderCurrentWorkout();
     showLogView();
   };
 

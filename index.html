@@ -7,7 +7,7 @@
     <title>Training Log</title>
     <link rel="stylesheet" href="./style.css?v=10" />
     <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#007bff" />
+    <meta name="theme-color" content="#3399ff" />
     <style>
       @font-face {
         font-family: "Bokor";
@@ -19,11 +19,6 @@
     <div class="container">
       <header>
         <h1>Training Log</h1>
-        <nav>
-          <button id="log-view-btn" class="active">Log Workout</button>
-          <button id="history-view-btn">History</button>
-          <button id="exercises-view-btn">Exercises</button>
-        </nav>
       </header>
 
       <main>
@@ -92,6 +87,8 @@
                   id="weight"
                   min="0"
                   step="any"
+                  inputmode="decimal"
+                  autocomplete="off"
                   placeholder="e.g., 100"
                   required
                   style="margin-top: auto"
@@ -165,6 +162,8 @@
                   type="number"
                   id="sets"
                   min="0"
+                  inputmode="numeric"
+                  autocomplete="off"
                   placeholder="e.g., 3"
                   required
                 />
@@ -175,6 +174,8 @@
                   type="number"
                   id="reps"
                   min="0"
+                  inputmode="numeric"
+                  autocomplete="off"
                   placeholder="e.g., 5"
                   required
                 />
@@ -183,7 +184,7 @@
             <button type="submit">Add Exercise</button>
           </form>
 
-          <div id="current-workout-section">
+          <div id="current-workout-section" class="hidden">
             <h2>Current Workout</h2>
             <div id="current-workout-list">
               <!-- Current exercises will be dynamically inserted here -->
@@ -349,47 +350,71 @@
         </section>
 
         <section id="chart-view" hidden>
-          <div class="chart-controls">
-            <button id="back-to-exercises-btn">Back to Exercises</button>
-            <button id="reset-zoom-btn" class="secondary">Reset Zoom</button>
+          <div class="chart-header">
+            <button id="back-to-exercises-btn" class="icon-btn" aria-label="Back to exercises">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <h2 id="chart-title"></h2>
+            <button id="chart-goal-toggle" class="icon-btn" aria-label="Set goal weight">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+            </button>
           </div>
-          <div
-            style="
-              display: flex;
-              gap: 0.5rem;
-              align-items: center;
-              margin-bottom: 0.5rem;
-              justify-content: center;
-            "
-          >
-            <label for="goal-weight-input" style="margin: 0">Goal (kg):</label>
+          <div id="chart-goal-row" class="chart-goal-row hidden">
+            <label for="goal-weight-input">Goal (kg):</label>
             <input
               type="number"
               id="goal-weight-input"
               min="0"
               step="any"
-              style="width: 80px; min-height: 36px; padding: 0.25rem 0.5rem"
+              inputmode="decimal"
+              autocomplete="off"
             />
-            <button
-              id="save-goal-btn"
-              class="secondary"
-              style="
-                margin: 0;
-                min-height: 36px;
-                padding: 0.25rem 0.75rem;
-                flex: 0 1 auto;
-              "
-            >
-              Save
+            <button id="save-goal-btn" class="secondary">Save</button>
+          </div>
+          <div class="chart-range-bar">
+            <div class="chart-range-buttons">
+              <button class="range-btn" data-range="1M">1M</button>
+              <button class="range-btn" data-range="3M">3M</button>
+              <button class="range-btn" data-range="6M">6M</button>
+              <button class="range-btn" data-range="1Y">1Y</button>
+              <button class="range-btn active" data-range="ALL">All</button>
+            </div>
+            <button id="reset-zoom-btn" class="icon-btn" aria-label="Reset zoom">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
             </button>
           </div>
-          <h2 id="chart-title"></h2>
-          <div style="position: relative; flex-grow: 1; min-height: 0">
+          <div class="chart-canvas-wrapper">
             <canvas id="exercise-chart"></canvas>
           </div>
         </section>
       </main>
     </div>
+
+    <nav id="bottom-nav">
+      <button id="log-view-btn" class="active">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        <span>Log</span>
+        <span id="workout-badge" class="nav-badge hidden"></span>
+      </button>
+      <button id="history-view-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <span>History</span>
+      </button>
+      <button id="exercises-view-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        <span>Exercises</span>
+      </button>
+    </nav>
+
+    <dialog id="app-dialog">
+      <div class="dialog-content">
+        <p id="dialog-message"></p>
+        <div class="dialog-actions">
+          <button id="dialog-cancel-btn" class="secondary">Cancel</button>
+          <button id="dialog-confirm-btn">OK</button>
+        </div>
+      </div>
+    </dialog>
 
     <script src="./dexie.min.js"></script>
     <!-- Chart.js is now lazy loaded -->
