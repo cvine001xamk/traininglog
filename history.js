@@ -30,18 +30,50 @@ export function initHistory() {
   }
 }
 
+const PAGE_SIZE = 20;
+let currentOffset = 0;
+
 export async function renderHistory() {
-  const workouts = await db.workouts.orderBy("date").reverse().toArray();
-  historyList.innerHTML =
-    workouts.length === 0
-      ? '<p class="text-center">No workouts logged yet.</p>'
-      : "";
+  currentOffset = 0;
+  historyList.innerHTML = "";
+
+  const total = await db.workouts.count();
+  if (total === 0) {
+    historyList.innerHTML = '<p class="text-center">No workouts logged yet.</p>';
+    return;
+  }
+
+  await appendHistoryPage();
+}
+
+async function appendHistoryPage() {
+  // Remove existing load-more button before appending new items
+  const existingBtn = historyList.querySelector(".load-more-btn");
+  if (existingBtn) existingBtn.remove();
+
+  const workouts = await db.workouts
+    .orderBy("date")
+    .reverse()
+    .offset(currentOffset)
+    .limit(PAGE_SIZE)
+    .toArray();
+
   const fragment = document.createDocumentFragment();
   workouts.forEach((workout) => {
     fragment.appendChild(createWorkoutArticle(workout));
   });
-  if (workouts.length > 0) {
-    historyList.appendChild(fragment);
+  historyList.appendChild(fragment);
+  currentOffset += workouts.length;
+
+  // If there are more items, show a Load More button
+  const total = await db.workouts.count();
+  if (currentOffset < total) {
+    const loadMoreBtn = document.createElement("button");
+    loadMoreBtn.textContent = `Load More (${total - currentOffset} remaining)`;
+    loadMoreBtn.className = "load-more-btn secondary";
+    loadMoreBtn.style.cssText = "width:100%; margin-top: 0.5rem;";
+    loadMoreBtn.addEventListener("click", appendHistoryPage);
+    historyList.appendChild(loadMoreBtn);
   }
 }
 
