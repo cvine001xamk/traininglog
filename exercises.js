@@ -292,20 +292,15 @@ const renderChart = async (exerciseName) => {
     goalWeightInput.value = goalWeight || "";
   }
 
-  const workouts = await db.workouts.orderBy("date").toArray();
-
-  // Aggregate by daily max weight to prevent stacked dots for multiple sets
+  // Stream workouts via cursor — avoids loading entire array into RAM
   const dailyMaxMap = new Map();
-  workouts.forEach((w) => {
+  await db.workouts.orderBy("date").each((w) => {
     const exerciseSets = w.exercises.filter((ex) => ex.exercise === exerciseName);
-    if (exerciseSets.length > 0) {
-      const maxWeight = Math.max(...exerciseSets.map(ex => parseFloat(ex.weight)));
-      // Normalize to start of day for accurate grouping
-      const dateKey = new Date(w.date).setHours(0, 0, 0, 0); 
-      
-      if (!dailyMaxMap.has(dateKey) || dailyMaxMap.get(dateKey) < maxWeight) {
-        dailyMaxMap.set(dateKey, maxWeight);
-      }
+    if (exerciseSets.length === 0) return;
+    const maxWeight = Math.max(...exerciseSets.map((ex) => parseFloat(ex.weight)));
+    const dateKey = new Date(w.date).setHours(0, 0, 0, 0);
+    if (!dailyMaxMap.has(dateKey) || dailyMaxMap.get(dateKey) < maxWeight) {
+      dailyMaxMap.set(dateKey, maxWeight);
     }
   });
 

@@ -85,14 +85,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const fragment = document.createDocumentFragment();
 
-    for (let i = 0; i < currentWorkout.length; i++) {
-      const exercise = currentWorkout[i];
+    // Run all plate calculations in parallel instead of sequentially
+    const plateResults = await Promise.all(
+      currentWorkout.map((ex) => calculatePlates(ex.weight, ex.barWeight))
+    );
+
+    currentWorkout.forEach((exercise, i) => {
+      const plates = plateResults[i];
       const item = document.createElement("article");
       item.className = "current-workout-item";
 
       const contentDiv = document.createElement("div");
       contentDiv.style.flex = "1";
-      const plates = await calculatePlates(exercise.weight, exercise.barWeight);
 
       if (plates) {
         let platesText = `${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar`;
@@ -100,11 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const plateWeights = plates.plates.map((p) => p.weight || p);
           platesText += ` [${plateWeights.join(", ")}]`;
         }
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${
-          exercise.weight
-        } kg (${platesText}) &times; ${
-          exercise.sets
-        } &times; ${exercise.reps}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       } else {
         contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       }
@@ -128,8 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
       item.appendChild(contentDiv);
       item.appendChild(editBtn);
       fragment.appendChild(item);
-    }
-    
+    });
+
     if (currentWorkout.length > 0) {
       currentWorkoutList.appendChild(fragment);
     }
@@ -161,20 +161,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let lastWeight = null;
     let maxWeight = 0;
 
-    const workouts = await db.workouts.orderBy("date").reverse().toArray();
-    for (let i = 0; i < workouts.length; i++) {
-      const exercise = workouts[i].exercises.find(
-        (ex) => ex.exercise === exerciseName,
-      );
+    // Stream through workouts with a cursor (.each) instead of loading all into RAM (.toArray)
+    await db.workouts.orderBy("date").reverse().each((workout) => {
+      const exercise = workout.exercises.find((ex) => ex.exercise === exerciseName);
       if (exercise) {
-        if (lastWeight === null) {
-          lastWeight = exercise.weight;
-        }
-        if (exercise.weight > maxWeight) {
-          maxWeight = exercise.weight;
-        }
+        if (lastWeight === null) lastWeight = exercise.weight;   // first match = most recent
+        if (exercise.weight > maxWeight) maxWeight = exercise.weight;
       }
-    }
+    });
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
@@ -369,10 +363,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   weightInput.addEventListener("input", updatePlateVisualizer);
-  exerciseSelect.addEventListener("change", updatePlateVisualizer);
 
+  // Merged into one listener — both run in parallel on exercise change
   exerciseSelect.addEventListener("change", (e) => {
-    updateLastWeightInfo(e.target.value);
+    Promise.all([
+      updatePlateVisualizer(),
+      updateLastWeightInfo(e.target.value),
+    ]);
   });
 
   addExerciseForm.addEventListener("submit", async (e) => {
