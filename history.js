@@ -36,9 +36,13 @@ export async function renderHistory() {
     workouts.length === 0
       ? '<p class="text-center">No workouts logged yet.</p>'
       : "";
+  const fragment = document.createDocumentFragment();
   workouts.forEach((workout) => {
-    historyList.appendChild(createWorkoutArticle(workout));
+    fragment.appendChild(createWorkoutArticle(workout));
   });
+  if (workouts.length > 0) {
+    historyList.appendChild(fragment);
+  }
 }
 
 const createWorkoutArticle = (workout) => {
@@ -109,9 +113,9 @@ const showEditView = (article, workout) => {
     form.dataset.index = index;
     form.innerHTML = `
               <input type="text" value="${ex.exercise}" data-field="exercise" disabled>
-              <input type="number" value="${ex.weight}" data-field="weight">
-              <input type="number" value="${ex.sets}" data-field="sets">
-              <input type="number" value="${ex.reps}" data-field="reps">
+              <input type="number" value="${ex.weight}" data-field="weight" step="any" inputmode="decimal">
+              <input type="number" value="${ex.sets}" data-field="sets" inputmode="numeric">
+              <input type="number" value="${ex.reps}" data-field="reps" inputmode="numeric">
           `;
     exercisesContainer.appendChild(form);
   });
@@ -193,6 +197,7 @@ const importFromCSV = () => {
     if (lines.length <= 1) return;
 
     const newWorkouts = {};
+    const exercisesToAdd = [];
     const allExerciseNames = new Set(
       (await db.exercises.toArray()).map((e) => e.name)
     );
@@ -215,14 +220,22 @@ const importFromCSV = () => {
           reps: parseInt(reps.trim()),
         });
         if (!allExerciseNames.has(exercise.trim())) {
-          await db.exercises.add({ name: exercise.trim() });
+          exercisesToAdd.push({ name: exercise.trim() });
           allExerciseNames.add(exercise.trim());
         }
       }
     }
-    if(Object.values(newWorkouts).length > 0) {
-      await db.workouts.bulkAdd(Object.values(newWorkouts));
-    }
+    
+    // Execute multiple table updates as one ACID transaction
+    await db.transaction('rw', db.workouts, db.exercises, async () => {
+      if (exercisesToAdd.length > 0) {
+        await db.exercises.bulkAdd(exercisesToAdd);
+      }
+      if(Object.values(newWorkouts).length > 0) {
+        await db.workouts.bulkAdd(Object.values(newWorkouts));
+      }
+    });
+    
     await renderHistory();
   };
   reader.readAsText(file);

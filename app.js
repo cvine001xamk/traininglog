@@ -76,6 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
     currentWorkoutSection.classList.toggle("hidden", !hasWorkout);
     updateWorkoutBadge();
 
+    const fragment = document.createDocumentFragment();
+
     for (let i = 0; i < currentWorkout.length; i++) {
       const exercise = currentWorkout[i];
       const item = document.createElement("article");
@@ -118,7 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       item.appendChild(contentDiv);
       item.appendChild(editBtn);
-      currentWorkoutList.appendChild(item);
+      fragment.appendChild(item);
+    }
+    
+    if (currentWorkout.length > 0) {
+      currentWorkoutList.appendChild(fragment);
     }
   };
 
@@ -148,22 +154,20 @@ document.addEventListener("DOMContentLoaded", () => {
     let lastWeight = null;
     let maxWeight = 0;
 
-    await db.workouts
-      .orderBy("date")
-      .reverse()
-      .each((workout) => {
-        const exercise = workout.exercises.find(
-          (ex) => ex.exercise === exerciseName,
-        );
-        if (exercise) {
-          if (lastWeight === null) {
-            lastWeight = exercise.weight;
-          }
-          if (exercise.weight > maxWeight) {
-            maxWeight = exercise.weight;
-          }
+    const workouts = await db.workouts.orderBy("date").reverse().toArray();
+    for (let i = 0; i < workouts.length; i++) {
+      const exercise = workouts[i].exercises.find(
+        (ex) => ex.exercise === exerciseName,
+      );
+      if (exercise) {
+        if (lastWeight === null) {
+          lastWeight = exercise.weight;
         }
-      });
+        if (exercise.weight > maxWeight) {
+          maxWeight = exercise.weight;
+        }
+      }
+    }
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
@@ -184,6 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- TIMER LOGIC ---
   let timerInterval = null;
   let timeRemaining = 0;
+  let targetEndTime = 0;
   let wakeLock = null;
 
   const requestWakeLock = async () => {
@@ -206,8 +211,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const updateTimerDisplay = () => {
+    if (timerInterval) {
+      timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+    }
+    
     if (timeRemaining <= 0) {
       timeRemaining = 0;
+      targetEndTime = 0;
       timerDisplay.textContent = "00:00";
       timerBadge.classList.remove("active");
       clearInterval(timerInterval);
@@ -226,16 +236,17 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   timerBadge.addEventListener("click", () => {
-    timeRemaining += 60;
     if (!timerInterval) {
+      timeRemaining = 60;
+      targetEndTime = Date.now() + timeRemaining * 1000;
       timerBadge.classList.add("active");
       requestWakeLock();
       updateTimerDisplay(); // immediate update
       timerInterval = setInterval(() => {
-        timeRemaining--;
         updateTimerDisplay();
       }, 1000);
     } else {
+      targetEndTime += 60000;
       updateTimerDisplay();
     }
   });
@@ -243,8 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Long press / right click to clear timer
   timerBadge.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    timeRemaining = 0;
-    updateTimerDisplay();
+    if (timerInterval) {
+        targetEndTime = 0;
+        updateTimerDisplay();
+    }
   });
 
   document.addEventListener("visibilitychange", async () => {

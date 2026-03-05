@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v22";
+const CACHE_NAME = "training-log-cache-v23";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -28,12 +28,25 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response;
-      }
-      return fetch(event.request);
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          // Background revalidation: update cache
+          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === "opaque")) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse.clone());
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Ignore network errors - will resolve to cachedResponse
+        });
+
+      return cachedResponse || fetchPromise;
     })
   );
 });

@@ -1,5 +1,5 @@
 // exercises.js
-import { db, loadScript, showAlert, showConfirm } from "./utils.js";
+import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache } from "./utils.js";
 
 let exerciseList;
 let addNewExerciseForm;
@@ -133,6 +133,7 @@ export function initExercises() {
         } else {
           await db.plates.add({ weight: weight, amount: amount, color: color });
         }
+        invalidatePlatesCache();
         await renderPlateList();
         addNewPlateForm.reset();
         document.getElementById("new-plate-color").value = "#cfcfcf";
@@ -144,6 +145,7 @@ export function initExercises() {
       if (deleteBtn) {
         const id = parseInt(deleteBtn.dataset.id);
         await db.plates.delete(id);
+        invalidatePlatesCache();
         await renderPlateList();
       }
     });
@@ -205,9 +207,18 @@ const renderExerciseManagementList = async () => {
 
     const infoDiv = document.createElement("div");
     infoDiv.className = "exercise-info";
+    infoDiv.style.flexDirection = "row";
+    infoDiv.style.alignItems = "center";
+    infoDiv.style.flex = "1";
+    infoDiv.style.paddingRight = "0.5rem";
+    infoDiv.style.minWidth = "0"; // Ensures child text truncation works
 
     const nameEl = document.createElement("strong");
     nameEl.textContent = ex.name; // Safe — no innerHTML
+    nameEl.style.flex = "1";
+    nameEl.style.whiteSpace = "nowrap";
+    nameEl.style.overflow = "hidden";
+    nameEl.style.textOverflow = "ellipsis";
     infoDiv.appendChild(nameEl);
 
     const barDiv = document.createElement("div");
@@ -282,14 +293,25 @@ const renderChart = async (exerciseName) => {
   }
 
   const workouts = await db.workouts.orderBy("date").toArray();
-  let exerciseHistory = workouts.flatMap((w) =>
-    w.exercises
-      .filter((ex) => ex.exercise === exerciseName)
-      .map((ex) => ({
-        x: new Date(w.date).getTime(),
-        y: parseFloat(ex.weight),
-      })),
-  );
+
+  // Aggregate by daily max weight to prevent stacked dots for multiple sets
+  const dailyMaxMap = new Map();
+  workouts.forEach((w) => {
+    const exerciseSets = w.exercises.filter((ex) => ex.exercise === exerciseName);
+    if (exerciseSets.length > 0) {
+      const maxWeight = Math.max(...exerciseSets.map(ex => parseFloat(ex.weight)));
+      // Normalize to start of day for accurate grouping
+      const dateKey = new Date(w.date).setHours(0, 0, 0, 0); 
+      
+      if (!dailyMaxMap.has(dateKey) || dailyMaxMap.get(dateKey) < maxWeight) {
+        dailyMaxMap.set(dateKey, maxWeight);
+      }
+    }
+  });
+
+  let exerciseHistory = Array.from(dailyMaxMap.entries())
+    .map(([time, weight]) => ({ x: time, y: weight }))
+    .sort((a, b) => a.x - b.x);
 
   // Apply time range filter
   if (currentTimeRange !== "ALL") {

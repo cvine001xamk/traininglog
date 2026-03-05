@@ -13,6 +13,12 @@ db.version(2).stores({
 });
 
 // Helper to calculate plate split using available plates
+let platesCache = null;
+
+export function invalidatePlatesCache() {
+  platesCache = null;
+}
+
 export async function calculatePlates(weight, barWeight = 10) {
   if (weight <= barWeight) return null;
 
@@ -20,22 +26,26 @@ export async function calculatePlates(weight, barWeight = 10) {
   let weightPerSide = (weight - barWeight) / 2;
   if (weightPerSide <= 0) return null;
 
-  // Retrieve available plates from DB, ordered by weight descending
+  // Retrieve available plates from cache or DB, ordered by weight descending
   // Plates must be pairs, so we divide the amount by 2
-  let availablePlates = await db.plates.orderBy("weight").reverse().toArray();
+  if (!platesCache) {
+    let availablePlates = await db.plates.orderBy("weight").reverse().toArray();
 
-  if (availablePlates.length === 0) {
-    availablePlates = [
-      { weight: 25, amount: 20, color: "#ff0000" },
-      { weight: 20, amount: 20, color: "#0000ff" },
-      { weight: 15, amount: 20, color: "#ffff00" },
-      { weight: 10, amount: 20, color: "#00ff00" },
-      { weight: 5, amount: 20, color: "#ffffff" },
-      { weight: 2.5, amount: 20, color: "#cfcfcf" },
-      { weight: 1.25, amount: 20, color: "#cfcfcf" },
-    ];
+    if (availablePlates.length === 0) {
+      availablePlates = [
+        { weight: 25, amount: 20, color: "#ff0000" },
+        { weight: 20, amount: 20, color: "#0000ff" },
+        { weight: 15, amount: 20, color: "#ffff00" },
+        { weight: 10, amount: 20, color: "#00ff00" },
+        { weight: 5, amount: 20, color: "#ffffff" },
+        { weight: 2.5, amount: 20, color: "#cfcfcf" },
+        { weight: 1.25, amount: 20, color: "#cfcfcf" },
+      ];
+    }
+    platesCache = availablePlates;
   }
-  const usablePlates = availablePlates
+  
+  let usablePlates = platesCache
     .map((p) => ({
       weight: p.weight,
       pairs: Math.floor(p.amount / 2),
@@ -134,8 +144,14 @@ export function formatDate(dateString) {
 }
 
 // Helper to lazy load scripts
+const loadedScripts = {};
+
 export function loadScript(src) {
-  return new Promise((resolve, reject) => {
+  if (loadedScripts[src]) {
+    return loadedScripts[src];
+  }
+
+  const promise = new Promise((resolve, reject) => {
     if (document.querySelector(`script[src="${src}"]`)) {
       resolve();
       return;
@@ -146,6 +162,9 @@ export function loadScript(src) {
     script.onerror = reject;
     document.head.appendChild(script);
   });
+
+  loadedScripts[src] = promise;
+  return promise;
 }
 
 // Styled dialog helpers (replace native alert/confirm)
