@@ -3,6 +3,13 @@ import { db, calculatePlates } from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
 
+// Prevent pinch-to-zoom while keeping 1-finger scroll intact (works on iOS Safari too)
+document.addEventListener("touchmove", (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMENTS ---
   const logViewBtn = document.getElementById("log-view-btn");

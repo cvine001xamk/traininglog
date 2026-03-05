@@ -24,12 +24,14 @@ html {
   padding: 0;
   width: 100%;
   scroll-behavior: smooth;
+  touch-action: pan-x pan-y;
 }
 
 body {
   margin: 0;
   padding: 0;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
   font-family: var(--font-family);
   background-color: var(--background-color);
   background-image: linear-gradient(to bottom, #050c38, #1b2062, #6700a3);
@@ -66,6 +68,7 @@ h2 {
   padding: var(--spacing);
   padding-bottom: calc(70px + env(safe-area-inset-bottom)); /* Space for bottom nav */
   overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 /* Header */
