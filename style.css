@@ -19,16 +19,17 @@
   --spacing: 0.5rem; /* Reduced global spacing */
 }
 
-html, body {
+html {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;
-  overscroll-behavior: none;
   scroll-behavior: smooth;
 }
 
 body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   font-family: var(--font-family);
   background-color: var(--background-color);
   background-image: linear-gradient(to bottom, #050c38, #1b2062, #6700a3);
@@ -64,6 +65,7 @@ h2 {
   margin: 0 auto;
   padding: var(--spacing);
   padding-bottom: calc(70px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+  overflow-x: hidden;
 }
 
 /* Header */
