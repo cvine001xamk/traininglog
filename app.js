@@ -192,6 +192,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let targetEndTime = 0;
   let wakeLock = null;
 
+  const tenAudio = new Audio('./static/ten.wav');
+  const goAudio = new Audio('./static/go.wav');
+  let tenPlayed = false;
+  let goPlayed = false;
+
   const requestWakeLock = async () => {
     try {
       if ("wakeLock" in navigator) {
@@ -216,7 +221,21 @@ document.addEventListener("DOMContentLoaded", () => {
       timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
     }
     
+    if (timeRemaining > 10) tenPlayed = false;
+    if (timeRemaining > 0) goPlayed = false;
+
+    if (timeRemaining === 10 && !tenPlayed) {
+      tenAudio.currentTime = 0;
+      tenAudio.play().catch(e => console.log('Audio error:', e));
+      tenPlayed = true;
+    }
+
     if (timeRemaining <= 0) {
+      if (timerInterval && !goPlayed) {
+        goAudio.currentTime = 0;
+        goAudio.play().catch(e => console.log('Audio error:', e));
+        goPlayed = true;
+      }
       timeRemaining = 0;
       targetEndTime = 0;
       timerDisplay.textContent = "00:00";
