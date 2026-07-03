@@ -167,7 +167,7 @@ button,
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  flex: 1; /* evenly spaced naturally or stretched */
+  flex: 1 1 auto; /* naturally sized yet still flexible */
   padding: 0.75rem 0.5rem; /* Larger touch targets for mobile */
   border: none;
   border-radius: var(--border-radius);
@@ -226,6 +226,7 @@ button[disabled],
   padding: 0.25rem;
   color: var(--primary-color);
   cursor: pointer;
+  flex: 0 0 auto;
 }
 
 .icon-btn svg {
@@ -323,9 +324,19 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(51, 153, 255, 0.3);
 }
 
+button:focus-visible,
+.btn:focus-visible,
+.icon-btn:focus-visible,
+input[type="text"]:focus-visible,
+input[type="number"]:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(51, 153, 255, 0.9);
+  outline-offset: 2px;
+}
+
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columns for mobile */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.5rem;
 }
 
@@ -474,7 +485,7 @@ article header {
 
 /* Edit form in history - stack vertically on mobile */
 .edit-form {
-  grid-template-columns: 1fr 1fr !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 0.4rem;
   margin-bottom: 0.5rem;
   padding: 0.25rem 0;

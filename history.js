@@ -1,5 +1,5 @@
 // history.js
-import { db, calculatePlates, formatDate, showConfirm, parseCSVLine } from './utils.js';
+import { db, formatDate, showConfirm, parseCSVLine } from './utils.js';
 
 let historyList;
 let importBtn;
@@ -292,12 +292,24 @@ const importFromCSV = () => {
           exerciseBarWeights.set(exerciseName, barWeight);
         }
 
+        const parsedWeight = parseFloat(weight.trim());
+        const parsedSets = parseInt(sets.trim(), 10);
+        const parsedReps = parseInt(reps.trim(), 10);
+        if (
+          isNaN(parsedWeight) || parsedWeight <= 0 ||
+          isNaN(parsedSets) || parsedSets <= 0 ||
+          isNaN(parsedReps) || parsedReps <= 0
+        ) {
+          console.warn(`Skipping invalid CSV row: ${lines[i]}`);
+          continue;
+        }
+
         newWorkouts[dateKey].exercises.push({
           exercise: exerciseName,
-          weight: parseFloat(weight.trim()),
-          sets: parseInt(sets.trim(), 10),
-          reps: parseInt(reps.trim(), 10),
-          barWeight: barWeight
+          weight: parsedWeight,
+          sets: parsedSets,
+          reps: parsedReps,
+          barWeight: barWeight,
         });
 
         if (!allExerciseNames.has(exerciseName)) {

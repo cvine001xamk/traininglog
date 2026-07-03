@@ -1,5 +1,5 @@
 // app.js
-import { db, calculatePlates } from "./utils.js";
+import { db, calculatePlates, showAlert } from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
 
@@ -409,16 +409,23 @@ document.addEventListener("DOMContentLoaded", () => {
   addExerciseForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const exerciseName = document.getElementById("exercise").value;
-    if (!exerciseName) return;
+    const weight = parseFloat(document.getElementById("weight").value);
+    const sets = parseInt(document.getElementById("sets").value, 10);
+    const reps = parseInt(document.getElementById("reps").value, 10);
+
+    if (!exerciseName || isNaN(weight) || weight <= 0 || isNaN(sets) || sets <= 0 || isNaN(reps) || reps <= 0) {
+      await showAlert("Please enter valid positive values for exercise, weight, sets and reps.");
+      return;
+    }
 
     const exerciseData = await db.exercises.get({ name: exerciseName });
     const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
 
     currentWorkout.push({
       exercise: exerciseName,
-      weight: parseFloat(document.getElementById("weight").value),
-      sets: parseInt(document.getElementById("sets").value, 10),
-      reps: parseInt(document.getElementById("reps").value, 10),
+      weight: weight,
+      sets: sets,
+      reps: reps,
       barWeight: barWeight,
     });
     await renderCurrentWorkout();
@@ -458,7 +465,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initHistory();
     initExercises();
 
-    await renderExerciseOptions();
     await renderCurrentWorkout();
     showLogView();
   };

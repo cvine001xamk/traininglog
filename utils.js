@@ -159,7 +159,10 @@ export function loadScript(src) {
     const script = document.createElement("script");
     script.src = src;
     script.onload = resolve;
-    script.onerror = reject;
+    script.onerror = (err) => {
+      delete loadedScripts[src];
+      reject(err);
+    };
     document.head.appendChild(script);
   });
 
