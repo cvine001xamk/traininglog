@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v30";
+const CACHE_NAME = "training-log-cache-v31";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -15,6 +15,11 @@ const urlsToCache = [
   "./static/logos/logo.png",
   "./static/logos/logo192.png",
   "./static/logos/logo512.png",
+  "./static/go.wav",
+  "./static/ten.wav",
+  "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js",
+  "https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js",
+  "https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2/dist/chartjs-plugin-annotation.min.js"
 ];
 
 self.addEventListener("install", (event) => {

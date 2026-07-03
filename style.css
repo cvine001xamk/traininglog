@@ -14,9 +14,9 @@
   --border-color: #6700a3;
   --danger-color: #dc3545;
   --font-family:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --border-radius: 0.25rem; /* Reduced radius */
-  --spacing: 0.5rem; /* Reduced global spacing */
+    'Outfit', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --border-radius: 0.5rem;
+  --spacing: 0.5rem;
 }
 
 html {
@@ -116,6 +116,24 @@ header {
 #bottom-nav button.active {
   color: var(--primary-color);
   background: transparent;
+}
+
+#bottom-nav button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 40%;
+  height: 3px;
+  background-color: var(--primary-color);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -1px 8px var(--primary-color);
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+#bottom-nav button.active::after {
+  transform: translateX(-50%) scaleX(1);
 }
 
 #bottom-nav button svg {
@@ -291,8 +309,18 @@ select {
   font-size: 16px; /* Keep input font size 16px to prevent zoom on iOS */
   min-height: 44px;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.08);
   color: white;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(51, 153, 255, 0.3);
 }
 
 .grid {
@@ -303,12 +331,23 @@ select {
 
 /* Cards / Articles */
 article {
-  background-color: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  padding: 0.75rem; /* Compact padding */
-  margin-bottom: 0.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: rgba(27, 32, 98, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(103, 0, 163, 0.4);
+  border-radius: 8px;
+  padding: 0.85rem;
+  margin-bottom: 0.65rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s, box-shadow 0.2s;
+}
+
+@media (hover: hover) {
+  article:hover {
+    transform: translateY(-2px);
+    border-color: rgba(103, 0, 163, 0.7);
+    box-shadow: 0 6px 24px rgba(103, 0, 163, 0.3);
+  }
 }
 
 article header {
@@ -623,6 +662,72 @@ article header {
   flex-grow: 1;
   width: 100% !important;
   height: auto !important;
+}
+
+.add-exercise-grid {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.add-exercise-grid .form-group {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.add-exercise-grid input {
+  margin-top: auto;
+}
+
+/* Barbell visualizer styles */
+.plate-visualizer-bar {
+  align-items: center;
+  justify-content: flex-start;
+  max-width: 240px;
+  width: 100%;
+  height: 64px;
+  margin: 0.5rem auto 1rem auto;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.barbell-sleeve {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  height: 10px;
+  background: linear-gradient(to bottom, #7f8c8d, #bdc3c7, #7f8c8d);
+  border-radius: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.barbell-collar {
+  position: absolute;
+  left: 35px;
+  height: 32px;
+  width: 8px;
+  background: linear-gradient(to right, #2c3e50, #34495e, #2c3e50);
+  border-radius: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+#plates-container {
+  display: flex;
+  gap: 1.5px;
+  align-items: center;
+  margin-left: 45px; /* Position to the right of collar */
+  position: relative;
+  z-index: 20;
+  height: 100%;
+  padding: 2px 0;
 }
 
 /* Responsive Design */

@@ -144,10 +144,10 @@ const showEditView = (article, workout) => {
     form.className = "grid edit-form";
     form.dataset.index = index;
     form.innerHTML = `
-              <input type="text" value="${ex.exercise}" data-field="exercise" disabled>
-              <input type="number" value="${ex.weight}" data-field="weight" step="any" inputmode="decimal">
-              <input type="number" value="${ex.sets}" data-field="sets" inputmode="numeric">
-              <input type="number" value="${ex.reps}" data-field="reps" inputmode="numeric">
+              <input type="text" value="${ex.exercise}" data-field="exercise" disabled aria-label="Exercise name">
+              <input type="number" value="${ex.weight}" data-field="weight" step="any" inputmode="decimal" placeholder="Weight (kg)" aria-label="Weight (kg)">
+              <input type="number" value="${ex.sets}" data-field="sets" inputmode="numeric" placeholder="Sets" aria-label="Sets">
+              <input type="number" value="${ex.reps}" data-field="reps" inputmode="numeric" placeholder="Reps" aria-label="Reps">
           `;
     exercisesContainer.appendChild(form);
   });
@@ -160,16 +160,46 @@ const showEditView = (article, workout) => {
   saveBtn.onclick = async () => {
     const updatedExercises = [];
     const forms = exercisesContainer.querySelectorAll("form");
-    forms.forEach((form) => {
+    let isValid = true;
+
+    for (const form of forms) {
       const index = form.dataset.index;
+      const exerciseName = form.querySelector('[data-field="exercise"]').value;
+      const rawWeight = form.querySelector('[data-field="weight"]').value;
+      const rawSets = form.querySelector('[data-field="sets"]').value;
+      const rawReps = form.querySelector('[data-field="reps"]').value;
+
+      const weight = parseFloat(rawWeight);
+      const sets = parseInt(rawSets, 10);
+      const reps = parseInt(rawReps, 10);
+
+      if (isNaN(weight) || weight < 0 || isNaN(sets) || sets < 0 || isNaN(reps) || reps < 0) {
+        isValid = false;
+        break;
+      }
+
+      // Safeguard barWeight if it's missing (e.g. from imported CSVs)
+      let barWeight = workout.exercises[index].barWeight;
+      if (barWeight === undefined || barWeight === null) {
+        const exerciseData = await db.exercises.get({ name: exerciseName });
+        barWeight = exerciseData ? exerciseData.barWeight || 20 : 20;
+      }
+
       updatedExercises.push({
-        exercise: form.querySelector('[data-field="exercise"]').value,
-        weight: form.querySelector('[data-field="weight"]').value,
-        sets: form.querySelector('[data-field="sets"]').value,
-        reps: form.querySelector('[data-field="reps"]').value,
-        barWeight: workout.exercises[index].barWeight
+        exercise: exerciseName,
+        weight: weight,
+        sets: sets,
+        reps: reps,
+        barWeight: barWeight
       });
-    });
+    }
+
+    if (!isValid) {
+      // showAlert is asynchronous, so await it
+      await showAlert("Please enter valid positive numbers for weight, sets, and reps.");
+      return;
+    }
+
     await db.workouts.update(workout.id, { exercises: updatedExercises });
     await renderHistory();
   };
@@ -230,30 +260,49 @@ const importFromCSV = () => {
 
     const newWorkouts = {};
     const exercisesToAdd = [];
-    const allExerciseNames = new Set(
-      (await db.exercises.toArray()).map((e) => e.name)
-    );
+    const allExercises = await db.exercises.toArray();
+    const allExerciseNames = new Set(allExercises.map((e) => e.name));
+    const exerciseBarWeights = new Map(allExercises.map((e) => [e.name, e.barWeight || 20]));
 
     for (let i = 1; i < lines.length; i++) {
       const fields = parseCSVLine(lines[i]);
       if (fields.length < 5) continue;
       const [date, exercise, weight, sets, reps] = fields;
       if (date && exercise && weight && sets && reps) {
-        if (!newWorkouts[date]) {
-          newWorkouts[date] = {
-            date: new Date(date).toISOString(),
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+          console.warn(`Skipping invalid CSV row date: ${date}`);
+          continue; // Safe skip instead of crashing
+        }
+
+        const dateKey = parsedDate.toISOString().split("T")[0];
+        const exerciseName = exercise.trim();
+
+        if (!newWorkouts[dateKey]) {
+          newWorkouts[dateKey] = {
+            date: parsedDate.toISOString(),
             exercises: [],
           };
         }
-        newWorkouts[date].exercises.push({
-          exercise: exercise.trim(),
+
+        // Retrieve or assign barWeight
+        let barWeight = exerciseBarWeights.get(exerciseName);
+        if (barWeight === undefined) {
+          barWeight = 20; // Default to 20kg barbell
+          exerciseBarWeights.set(exerciseName, barWeight);
+        }
+
+        newWorkouts[dateKey].exercises.push({
+          exercise: exerciseName,
           weight: parseFloat(weight.trim()),
-          sets: parseInt(sets.trim()),
-          reps: parseInt(reps.trim()),
+          sets: parseInt(sets.trim(), 10),
+          reps: parseInt(reps.trim(), 10),
+          barWeight: barWeight
         });
-        if (!allExerciseNames.has(exercise.trim())) {
-          exercisesToAdd.push({ name: exercise.trim() });
-          allExerciseNames.add(exercise.trim());
+
+        if (!allExerciseNames.has(exerciseName)) {
+          exercisesToAdd.push({ name: exerciseName, barWeight: 20 });
+          allExerciseNames.add(exerciseName);
         }
       }
     }
@@ -263,11 +312,12 @@ const importFromCSV = () => {
       if (exercisesToAdd.length > 0) {
         await db.exercises.bulkAdd(exercisesToAdd);
       }
-      if(Object.values(newWorkouts).length > 0) {
+      if (Object.values(newWorkouts).length > 0) {
         await db.workouts.bulkAdd(Object.values(newWorkouts));
       }
     });
     
+    fileInput.value = ""; // Reset input value so re-importing the same file works
     await renderHistory();
   };
   reader.readAsText(file);

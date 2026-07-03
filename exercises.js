@@ -330,35 +330,57 @@ const renderChart = async (exerciseName) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    interaction: {
+      // Index mode: tapping anywhere in a vertical band shows the tooltip,
+      // far more reliable than requiring a precise point hit on mobile.
+      mode: "index",
+      intersect: false,
+    },
     scales: {
       y: {
-        beginAtZero: true,
-        grace: "10%",
+        // beginAtZero: false lets the chart zoom in on actual data range so
+        // even small progress is visible rather than dwarfed by a 0 baseline.
+        beginAtZero: false,
+        grace: "5%",
         grid: {
-          color: "rgba(255, 255, 255, 0.1)",
+          color: "rgba(255, 255, 255, 0.08)",
         },
         ticks: {
           color: "#99aab5",
+          font: { size: 12 },
+          maxTicksLimit: 6,
         }
       },
       x: {
         type: "time",
         time: {
-          unit: "day",
-          displayFormats: {
-            day: "dd.MM.yy",
-          },
+          // Let Chart.js pick the best unit (day/week/month) automatically
+          // so the x-axis is never overcrowded on mobile.
           tooltipFormat: "PP",
+          displayFormats: {
+            day: "d MMM",
+            week: "d MMM",
+            month: "MMM yy",
+          },
         },
         grid: {
-          color: "rgba(255, 255, 255, 0.1)",
+          color: "rgba(255, 255, 255, 0.08)",
         },
         ticks: {
           color: "#99aab5",
+          font: { size: 11 },
+          // Limit tick count so dates never overlap on a narrow phone screen.
+          autoSkip: true,
+          maxTicksLimit: 6,
+          maxRotation: 0,   // Never rotate labels — keeps axis clean.
+          minRotation: 0,
         }
       },
     },
     plugins: {
+      legend: {
+        display: false, // Save vertical space; the chart title already names the exercise.
+      },
       annotation: {
         annotations: goalWeight
           ? {
@@ -371,9 +393,13 @@ const renderChart = async (exerciseName) => {
                 borderDash: [5, 5],
                 label: {
                   display: true,
-                  content: "Goal",
+                  content: `Goal: ${goalWeight} kg`,
                   position: "start",
-                  backgroundColor: "rgba(255, 159, 64, 0.8)",
+                  backgroundColor: "rgba(255, 159, 64, 0.85)",
+                  color: "#fff",
+                  font: { size: 11, weight: "bold" },
+                  padding: { x: 6, y: 3 },
+                  borderRadius: 4,
                 },
               },
             }
@@ -383,15 +409,13 @@ const renderChart = async (exerciseName) => {
         pan: {
           enabled: true,
           mode: "x",
-          threshold: 5,
+          // Raised from 5 → 10 so vertical page scrolls don't accidentally
+          // trigger a chart pan on mobile.
+          threshold: 10,
         },
         zoom: {
-          wheel: {
-            enabled: true,
-          },
-          pinch: {
-            enabled: true,
-          },
+          wheel: { enabled: true },
+          pinch: { enabled: true },
           mode: "x",
         },
       },
@@ -407,12 +431,19 @@ const renderChart = async (exerciseName) => {
           label: "Weight (kg)",
           data: exerciseHistory,
           borderColor: "#3399ff",
-          backgroundColor: "rgba(51, 153, 255, 0.2)",
-          tension: 0.2,
+          backgroundColor: "rgba(51, 153, 255, 0.15)",
+          tension: 0.3,
           fill: true,
-          pointRadius: 6,
-          pointHoverRadius: 10,
-          borderWidth: 3,
+          // Smaller resting radius so dense points don't overlap;
+          // large hover radius for easy fat-finger tapping.
+          pointRadius: 4,
+          pointHoverRadius: 12,
+          pointBackgroundColor: "#3399ff",
+          pointHoverBackgroundColor: "#fff",
+          pointBorderWidth: 0,
+          pointHoverBorderWidth: 2,
+          pointHoverBorderColor: "#3399ff",
+          borderWidth: 2.5,
         },
       ],
     },

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Uncomment before deploying: <base href="https://cvine001xamk.github.io/traininglog/" /> -->
     <title>Training Log</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./style.css?v=10" />
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#3399ff" />
@@ -60,28 +63,11 @@
               <select id="exercise" required>
                 <!-- Exercise options will be populated by JS -->
               </select>
+              <small id="last-weight-info" style="display: block; margin-top: 0.25rem; min-height: 1.25rem; color: var(--secondary-color);"></small>
             </div>
-            <div class="grid">
-              <div
-                class="form-group"
-                style="
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: flex-end;
-                "
-              >
-                <label
-                  for="weight"
-                  style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-end;
-                    margin-bottom: 0.25rem;
-                  "
-                >
-                  <span>Weight (kg)</span>
-                </label>
-                <small id="last-weight-info"></small>
+            <div class="grid add-exercise-grid">
+              <div class="form-group">
+                <label for="weight">Weight (kg)</label>
                 <input
                   type="number"
                   id="weight"
@@ -91,70 +77,7 @@
                   autocomplete="off"
                   placeholder="e.g., 100"
                   required
-                  style="margin-top: auto"
                 />
-              </div>
-              <div
-                class="form-group"
-                style="display: flex; flex-direction: column; height: 100%"
-              >
-                <div
-                  id="plate-visualizer"
-                  style="
-                    display: none;
-                    align-items: center;
-                    justify-content: flex-start;
-                    flex: 1;
-                    width: 100%;
-                    max-height: 74px;
-                    margin-top: auto;
-                    border-radius: 4px;
-                    background: transparent;
-                    overflow: hidden;
-                    position: relative;
-                  "
-                >
-                  <!-- Barbell sleeve -->
-                  <div
-                    style="
-                      position: absolute;
-                      left: 0;
-                      right: 0;
-                      height: 8px;
-                      background: #666;
-                      border-radius: 2px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                    "
-                  ></div>
-                  <!-- Collar -->
-                  <div
-                    style="
-                      position: absolute;
-                      left: 4px;
-                      height: 16px;
-                      width: 6px;
-                      background: #444;
-                      border-radius: 2px;
-                      top: 50%;
-                      transform: translateY(-50%);
-                      z-index: 10;
-                    "
-                  ></div>
-                  <div
-                    id="plates-container"
-                    style="
-                      display: flex;
-                      gap: 1px;
-                      align-items: center;
-                      margin-left: 12px;
-                      position: relative;
-                      z-index: 20;
-                      height: 100%;
-                      padding: 4px 0;
-                    "
-                  ></div>
-                </div>
               </div>
               <div class="form-group">
                 <label for="sets">Sets</label>
@@ -180,6 +103,14 @@
                   required
                 />
               </div>
+            </div>
+
+            <div id="plate-visualizer" class="plate-visualizer-bar" style="display: none;">
+              <!-- Barbell sleeve -->
+              <div class="barbell-sleeve"></div>
+              <!-- Collar -->
+              <div class="barbell-collar"></div>
+              <div id="plates-container"></div>
             </div>
             <button type="submit">Add Exercise</button>
           </form>

@@ -115,12 +115,16 @@ document.addEventListener("DOMContentLoaded", () => {
       editBtn.setAttribute("aria-label", "Edit exercise");
       editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
       editBtn.onclick = async () => {
+        currentWorkout.splice(i, 1);
+        await renderExerciseOptions();
+        await renderCurrentWorkout();
+        
         document.getElementById("exercise").value = exercise.exercise;
         document.getElementById("weight").value = exercise.weight;
         document.getElementById("sets").value = exercise.sets;
         document.getElementById("reps").value = exercise.reps;
-        currentWorkout.splice(i, 1);
-        await renderCurrentWorkout();
+        
+        await updatePlateVisualizer();
         document.getElementById("weight").focus();
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
@@ -201,6 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if ("wakeLock" in navigator) {
         wakeLock = await navigator.wakeLock.request("screen");
+        wakeLock.addEventListener("release", () => {
+          wakeLock = null;
+        });
       }
     } catch (err) {
       console.log(`Wake Lock error: ${err.name}, ${err.message}`);
@@ -256,6 +263,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   timerBadge.addEventListener("click", () => {
+    // Unlock audio elements for iOS mobile Safari
+    [tenAudio, goAudio].forEach((audio) => {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch((e) => console.log("Audio unlock error:", e));
+    });
+
     if (!timerInterval) {
       timeRemaining = 60;
       targetEndTime = Date.now() + timeRemaining * 1000;
@@ -356,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       plateEl.style.cssText = `
         height: ${plateHeight};
-        width: 11px;
+        width: 14px;
         background-color: ${plateColor};
         border-radius: 3px;
         display: flex;
