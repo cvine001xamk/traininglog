@@ -44,7 +44,7 @@ export async function calculatePlates(weight, barWeight = 10) {
     }
     platesCache = availablePlates;
   }
-  
+
   let usablePlates = platesCache
     .map((p) => ({
       weight: p.weight,
@@ -188,8 +188,16 @@ export function showAlert(message) {
       dialog.removeEventListener("click", onBackdrop);
     };
 
-    const onConfirm = () => { cleanup(); resolve(); };
-    const onBackdrop = (e) => { if (e.target === dialog) { cleanup(); resolve(); } };
+    const onConfirm = () => {
+      cleanup();
+      resolve();
+    };
+    const onBackdrop = (e) => {
+      if (e.target === dialog) {
+        cleanup();
+        resolve();
+      }
+    };
 
     confirmBtn.addEventListener("click", onConfirm);
     dialog.addEventListener("click", onBackdrop);
@@ -216,9 +224,20 @@ export function showConfirm(message) {
       dialog.removeEventListener("click", onBackdrop);
     };
 
-    const onConfirm = () => { cleanup(); resolve(true); };
-    const onCancel = () => { cleanup(); resolve(false); };
-    const onBackdrop = (e) => { if (e.target === dialog) { cleanup(); resolve(false); } };
+    const onConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+    const onCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+    const onBackdrop = (e) => {
+      if (e.target === dialog) {
+        cleanup();
+        resolve(false);
+      }
+    };
 
     confirmBtn.addEventListener("click", onConfirm);
     cancelBtn.addEventListener("click", onCancel);

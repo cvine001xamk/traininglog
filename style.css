@@ -1,5 +1,7 @@
 /* Reset & Base */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
@@ -14,7 +16,8 @@
   --border-color: #6700a3;
   --danger-color: #dc3545;
   --font-family:
-    'Outfit', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    sans-serif;
   --border-radius: 0.5rem;
   --spacing: 0.5rem;
 }
@@ -66,7 +69,9 @@ h2 {
   max-width: 100%; /* Full width on mobile */
   margin: 0 auto;
   padding: var(--spacing);
-  padding-bottom: calc(70px + env(safe-area-inset-bottom)); /* Space for bottom nav */
+  padding-bottom: calc(
+    70px + env(safe-area-inset-bottom)
+  ); /* Space for bottom nav */
   overflow-x: hidden;
   touch-action: pan-y;
 }
@@ -119,7 +124,7 @@ header {
 }
 
 #bottom-nav button::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -183,8 +188,6 @@ button,
   min-height: 44px; /* Apple UI Guideline */
 }
 
-
-
 @media (hover: hover) {
   button:hover,
   .btn:hover {
@@ -197,7 +200,10 @@ button:active,
   transform: scale(0.97);
   opacity: 0.8;
   background-color: var(--secondary-color);
-  transition: transform 0.05s, opacity 0.05s, background-color 0.05s;
+  transition:
+    transform 0.05s,
+    opacity 0.05s,
+    background-color 0.05s;
 }
 
 button.active,
@@ -312,7 +318,10 @@ select {
   box-sizing: border-box;
   background-color: rgba(255, 255, 255, 0.08);
   color: white;
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s,
+    background-color 0.2s;
 }
 
 input[type="text"]:focus,
@@ -350,7 +359,10 @@ article {
   padding: 0.85rem;
   margin-bottom: 0.65rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 @media (hover: hover) {
@@ -640,7 +652,9 @@ article header {
   font-size: 0.75rem;
   font-weight: 600;
   min-height: 32px;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .range-btn.active {

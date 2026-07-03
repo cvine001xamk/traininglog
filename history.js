@@ -1,5 +1,5 @@
 // history.js
-import { db, formatDate, showConfirm, parseCSVLine } from './utils.js';
+import { db, formatDate, showConfirm, parseCSVLine } from "./utils.js";
 
 let historyList;
 let importBtn;
@@ -19,7 +19,9 @@ export function initHistory() {
     exportBtn.addEventListener("click", exportToCSV);
     importBtn.addEventListener("click", () => fileInput.click());
     clearBtn.addEventListener("click", async () => {
-      const confirmed = await showConfirm("Are you sure you want to clear ALL workout history? This cannot be undone.");
+      const confirmed = await showConfirm(
+        "Are you sure you want to clear ALL workout history? This cannot be undone.",
+      );
       if (confirmed) {
         await db.workouts.clear();
         await renderHistory();
@@ -39,7 +41,8 @@ export async function renderHistory() {
 
   const total = await db.workouts.count();
   if (total === 0) {
-    historyList.innerHTML = '<p class="text-center">No workouts logged yet.</p>';
+    historyList.innerHTML =
+      '<p class="text-center">No workouts logged yet.</p>';
     return;
   }
 
@@ -101,7 +104,9 @@ const createWorkoutArticle = (workout) => {
   deleteBtn.setAttribute("aria-label", "Delete Workout");
   deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
   deleteBtn.onclick = async () => {
-    const confirmed = await showConfirm("Are you sure you want to delete this workout?");
+    const confirmed = await showConfirm(
+      "Are you sure you want to delete this workout?",
+    );
     if (confirmed) {
       await db.workouts.delete(workout.id);
       await renderHistory();
@@ -173,7 +178,14 @@ const showEditView = (article, workout) => {
       const sets = parseInt(rawSets, 10);
       const reps = parseInt(rawReps, 10);
 
-      if (isNaN(weight) || weight < 0 || isNaN(sets) || sets < 0 || isNaN(reps) || reps < 0) {
+      if (
+        isNaN(weight) ||
+        weight < 0 ||
+        isNaN(sets) ||
+        sets < 0 ||
+        isNaN(reps) ||
+        reps < 0
+      ) {
         isValid = false;
         break;
       }
@@ -190,13 +202,15 @@ const showEditView = (article, workout) => {
         weight: weight,
         sets: sets,
         reps: reps,
-        barWeight: barWeight
+        barWeight: barWeight,
       });
     }
 
     if (!isValid) {
       // showAlert is asynchronous, so await it
-      await showAlert("Please enter valid positive numbers for weight, sets, and reps.");
+      await showAlert(
+        "Please enter valid positive numbers for weight, sets, and reps.",
+      );
       return;
     }
 
@@ -241,7 +255,7 @@ const exportToCSV = async () => {
   const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodedUri);
-  const date = new Date().toISOString().split('T')[0];
+  const date = new Date().toISOString().split("T")[0];
   link.setAttribute("download", `training_log_export_${date}.csv`);
   document.body.appendChild(link);
   link.click();
@@ -262,7 +276,9 @@ const importFromCSV = () => {
     const exercisesToAdd = [];
     const allExercises = await db.exercises.toArray();
     const allExerciseNames = new Set(allExercises.map((e) => e.name));
-    const exerciseBarWeights = new Map(allExercises.map((e) => [e.name, e.barWeight || 20]));
+    const exerciseBarWeights = new Map(
+      allExercises.map((e) => [e.name, e.barWeight || 20]),
+    );
 
     for (let i = 1; i < lines.length; i++) {
       const fields = parseCSVLine(lines[i]);
@@ -296,9 +312,12 @@ const importFromCSV = () => {
         const parsedSets = parseInt(sets.trim(), 10);
         const parsedReps = parseInt(reps.trim(), 10);
         if (
-          isNaN(parsedWeight) || parsedWeight <= 0 ||
-          isNaN(parsedSets) || parsedSets <= 0 ||
-          isNaN(parsedReps) || parsedReps <= 0
+          isNaN(parsedWeight) ||
+          parsedWeight <= 0 ||
+          isNaN(parsedSets) ||
+          parsedSets <= 0 ||
+          isNaN(parsedReps) ||
+          parsedReps <= 0
         ) {
           console.warn(`Skipping invalid CSV row: ${lines[i]}`);
           continue;
@@ -318,9 +337,9 @@ const importFromCSV = () => {
         }
       }
     }
-    
+
     // Execute multiple table updates as one ACID transaction
-    await db.transaction('rw', db.workouts, db.exercises, async () => {
+    await db.transaction("rw", db.workouts, db.exercises, async () => {
       if (exercisesToAdd.length > 0) {
         await db.exercises.bulkAdd(exercisesToAdd);
       }
@@ -328,7 +347,7 @@ const importFromCSV = () => {
         await db.workouts.bulkAdd(Object.values(newWorkouts));
       }
     });
-    
+
     fileInput.value = ""; // Reset input value so re-importing the same file works
     await renderHistory();
   };
