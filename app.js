@@ -196,11 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let targetEndTime = 0;
   let wakeLock = null;
 
-  const tenAudio = new Audio('./static/ten.wav');
-  const goAudio = new Audio('./static/go.wav');
-  let tenPlayed = false;
-  let goPlayed = false;
-
   const requestWakeLock = async () => {
     try {
       if ("wakeLock" in navigator) {
@@ -232,15 +227,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (timeRemaining > 0) goPlayed = false;
 
     if (timeRemaining === 10 && !tenPlayed) {
-      tenAudio.currentTime = 0;
-      tenAudio.play().catch(e => console.log('Audio error:', e));
+      playAudioCue(tenBuffer);
       tenPlayed = true;
     }
 
     if (timeRemaining <= 0) {
       if (timerInterval && !goPlayed) {
-        goAudio.currentTime = 0;
-        goAudio.play().catch(e => console.log('Audio error:', e));
+        playAudioCue(goBuffer);
         goPlayed = true;
       }
       timeRemaining = 0;
@@ -262,14 +255,9 @@ document.addEventListener("DOMContentLoaded", () => {
     timerDisplay.textContent = `${m}:${s}`;
   };
 
-  timerBadge.addEventListener("click", () => {
-    // Unlock audio elements for iOS mobile Safari
-    [tenAudio, goAudio].forEach((audio) => {
-      audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-      }).catch((e) => console.log("Audio unlock error:", e));
-    });
+  timerBadge.addEventListener("click", async () => {
+    await preloadTimerCues();
+    await unlockAudio();
 
     if (!timerInterval) {
       timeRemaining = 60;
@@ -286,12 +274,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const createAudioContext = () => {
+    if (audioContext) return audioContext;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return null;
+    audioContext = new AudioContext();
+    return audioContext;
+  };
+
+  const loadAudioBuffer = async (src) => {
+    try {
+      const context = createAudioContext();
+      if (!context) return null;
+      const response = await fetch(src);
+      const arrayBuffer = await response.arrayBuffer();
+      return await context.decodeAudioData(arrayBuffer);
+    } catch (err) {
+      console.warn("Failed to load audio cue:", src, err);
+      return null;
+    }
+  };
+
+  const playAudioCue = (buffer) => {
+    try {
+      const context = createAudioContext();
+      if (!context || !buffer) return;
+      if (context.state === "suspended") {
+        context.resume().catch(() => {});
+      }
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      source.start(0);
+    } catch (err) {
+      console.warn("Audio cue playback failed", err);
+    }
+  };
+
+  const unlockAudio = async () => {
+    const context = createAudioContext();
+    if (!context) return;
+    if (context.state === "suspended") {
+      await context.resume().catch((e) => {
+        console.warn("Audio context resume failed:", e);
+      });
+    }
+  };
+
+  let audioContext = null;
+  let tenBuffer = null;
+  let goBuffer = null;
+  let timerAudioLoaded = false;
+  let tenPlayed = false;
+  let goPlayed = false;
+
+  const preloadTimerCues = async () => {
+    if (timerAudioLoaded) return;
+    tenBuffer = await loadAudioBuffer("./static/ten.wav");
+    goBuffer = await loadAudioBuffer("./static/go.wav");
+    timerAudioLoaded = true;
+  };
+
   // Long press / right click to clear timer
   timerBadge.addEventListener("contextmenu", (e) => {
     e.preventDefault();
     if (timerInterval) {
-        targetEndTime = 0;
-        updateTimerDisplay();
+      targetEndTime = 0;
+      updateTimerDisplay();
     }
   });
 
