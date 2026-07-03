@@ -4,11 +4,15 @@ import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
 
 // Prevent pinch-to-zoom while keeping 1-finger scroll intact (works on iOS Safari too)
-document.addEventListener("touchmove", (e) => {
-  if (e.touches.length > 1) {
-    e.preventDefault();
-  }
-}, { passive: false });
+document.addEventListener(
+  "touchmove",
+  (e) => {
+    if (e.touches.length > 1) {
+      e.preventDefault();
+    }
+  },
+  { passive: false },
+);
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- ELEMENTS ---
@@ -32,7 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerBadge = document.getElementById("timer-badge");
   const timerDisplay = document.getElementById("timer-display");
   const workoutBadge = document.getElementById("workout-badge");
-  const currentWorkoutSection = document.getElementById("current-workout-section");
+  const currentWorkoutSection = document.getElementById(
+    "current-workout-section",
+  );
 
   // --- DATA ---
   let currentWorkout = [];
@@ -87,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Run all plate calculations in parallel instead of sequentially
     const plateResults = await Promise.all(
-      currentWorkout.map((ex) => calculatePlates(ex.weight, ex.barWeight))
+      currentWorkout.map((ex) => calculatePlates(ex.weight, ex.barWeight)),
     );
 
     currentWorkout.forEach((exercise, i) => {
@@ -118,12 +124,12 @@ document.addEventListener("DOMContentLoaded", () => {
         currentWorkout.splice(i, 1);
         await renderExerciseOptions();
         await renderCurrentWorkout();
-        
+
         document.getElementById("exercise").value = exercise.exercise;
         document.getElementById("weight").value = exercise.weight;
         document.getElementById("sets").value = exercise.sets;
         document.getElementById("reps").value = exercise.reps;
-        
+
         await updatePlateVisualizer();
         document.getElementById("weight").focus();
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -166,13 +172,18 @@ document.addEventListener("DOMContentLoaded", () => {
     let maxWeight = 0;
 
     // Stream through workouts with a cursor (.each) instead of loading all into RAM (.toArray)
-    await db.workouts.orderBy("date").reverse().each((workout) => {
-      const exercise = workout.exercises.find((ex) => ex.exercise === exerciseName);
-      if (exercise) {
-        if (lastWeight === null) lastWeight = exercise.weight;   // first match = most recent
-        if (exercise.weight > maxWeight) maxWeight = exercise.weight;
-      }
-    });
+    await db.workouts
+      .orderBy("date")
+      .reverse()
+      .each((workout) => {
+        const exercise = workout.exercises.find(
+          (ex) => ex.exercise === exerciseName,
+        );
+        if (exercise) {
+          if (lastWeight === null) lastWeight = exercise.weight; // first match = most recent
+          if (exercise.weight > maxWeight) maxWeight = exercise.weight;
+        }
+      });
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
@@ -220,9 +231,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const updateTimerDisplay = () => {
     if (timerInterval) {
-      timeRemaining = Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000));
+      timeRemaining = Math.max(
+        0,
+        Math.ceil((targetEndTime - Date.now()) / 1000),
+      );
     }
-    
+
     if (timeRemaining > 10) tenPlayed = false;
     if (timeRemaining > 0) goPlayed = false;
 
@@ -462,8 +476,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const sets = parseInt(document.getElementById("sets").value, 10);
     const reps = parseInt(document.getElementById("reps").value, 10);
 
-    if (!exerciseName || isNaN(weight) || weight <= 0 || isNaN(sets) || sets <= 0 || isNaN(reps) || reps <= 0) {
-      await showAlert("Please enter valid positive values for exercise, weight, sets and reps.");
+    if (
+      !exerciseName ||
+      isNaN(weight) ||
+      weight <= 0 ||
+      isNaN(sets) ||
+      sets <= 0 ||
+      isNaN(reps) ||
+      reps <= 0
+    ) {
+      await showAlert(
+        "Please enter valid positive values for exercise, weight, sets and reps.",
+      );
       return;
     }
 

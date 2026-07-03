@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v33";
+const CACHE_NAME = "training-log-cache-v34";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -25,7 +25,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log("Opened cache");
       return cache.addAll(urlsToCache);
-    })
+    }),
   );
 });
 
@@ -37,7 +37,11 @@ self.addEventListener("fetch", (event) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           // Background revalidation: update cache
-          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === "opaque")) {
+          if (
+            networkResponse &&
+            (networkResponse.status === 200 ||
+              networkResponse.type === "opaque")
+          ) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, networkResponse.clone());
             });
@@ -48,8 +52,19 @@ self.addEventListener("fetch", (event) => {
           return null;
         });
 
-      return cachedResponse || fetchPromise.then((response) => response || cachedResponse || new Response("Service Unavailable", { status: 503, statusText: "Service Unavailable" }));
-    })
+      return (
+        cachedResponse ||
+        fetchPromise.then(
+          (response) =>
+            response ||
+            cachedResponse ||
+            new Response("Service Unavailable", {
+              status: 503,
+              statusText: "Service Unavailable",
+            }),
+        )
+      );
+    }),
   );
 });
 
@@ -63,10 +78,10 @@ self.addEventListener("activate", (event) => {
             if (cacheWhitelist.indexOf(cacheName) === -1) {
               return caches.delete(cacheName);
             }
-          })
+          }),
         );
       }),
-      self.clients.claim()
-    ])
+      self.clients.claim(),
+    ]),
   );
 });
