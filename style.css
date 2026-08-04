@@ -676,6 +676,64 @@ article header {
   justify-content: center;
 }
 
+/* Chart stats summary */
+.chart-stats-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+}
+
+.stat-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stat-badge {
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.stat-badge.positive {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.stat-badge.negative {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.stat-badge.neutral {
+  background: rgba(149, 165, 166, 0.2);
+  color: #95a5a6;
+  border: 1px solid rgba(149, 165, 166, 0.4);
+}
+
+.stat-badge.info {
+  background: rgba(52, 152, 219, 0.2);
+  color: #3498db;
+  border: 1px solid rgba(52, 152, 219, 0.4);
+}
+
+.stat-period {
+  color: var(--secondary-color);
+  font-size: 0.78rem;
+}
+
 /* Chart canvas */
 .chart-canvas-wrapper {
   position: relative;

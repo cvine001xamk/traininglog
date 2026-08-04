@@ -321,6 +321,70 @@ const renderChart = async (exerciseName) => {
     exerciseHistory = exerciseHistory.filter(d => d.x >= cutoffTime);
   }
 
+  // Update change stats summary badge
+  const statsSummaryEl = document.getElementById("chart-stats-summary");
+  const changeBadgeEl = document.getElementById("chart-change-badge");
+  const countBadgeEl = document.getElementById("chart-count-badge");
+  const changePeriodEl = document.getElementById("chart-change-period");
+
+  if (statsSummaryEl && changeBadgeEl && changePeriodEl) {
+    const totalCount = exerciseHistory.length;
+
+    // Calculate time span in weeks for selected horizon
+    let totalWeeks = 1;
+    const now = Date.now();
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+
+    if (currentTimeRange !== "ALL") {
+      let cutoff = new Date();
+      if (currentTimeRange === "1M") cutoff.setMonth(new Date().getMonth() - 1);
+      else if (currentTimeRange === "3M") cutoff.setMonth(new Date().getMonth() - 3);
+      else if (currentTimeRange === "6M") cutoff.setMonth(new Date().getMonth() - 6);
+      else if (currentTimeRange === "1Y") cutoff.setFullYear(new Date().getFullYear() - 1);
+      totalWeeks = Math.max(0.1, (now - cutoff.getTime()) / msPerWeek);
+    } else if (totalCount >= 1) {
+      const firstTime = exerciseHistory[0].x;
+      totalWeeks = Math.max(1, (now - firstTime) / msPerWeek);
+    }
+
+    const weeklyAvg = (totalCount / totalWeeks).toFixed(1);
+
+    if (countBadgeEl) {
+      countBadgeEl.textContent = `${totalCount} ${totalCount === 1 ? "exercise" : "exercises"} (${weeklyAvg}/wk)`;
+    }
+
+    if (totalCount >= 2) {
+      const startWeight = exerciseHistory[0].y;
+      const endWeight = exerciseHistory[totalCount - 1].y;
+      const diffKg = endWeight - startWeight;
+      const diffPct = startWeight > 0 ? (diffKg / startWeight) * 100 : 0;
+
+      const sign = diffKg > 0 ? "+" : "";
+      const formattedKg = `${sign}${diffKg.toFixed(1)} kg`;
+      const formattedPct = `${sign}${diffPct.toFixed(1)}%`;
+
+      changeBadgeEl.textContent = `${formattedKg} (${formattedPct})`;
+      changeBadgeEl.className = "stat-badge " + (diffKg > 0 ? "positive" : diffKg < 0 ? "negative" : "neutral");
+
+      const rangeLabels = {
+        "1M": "past month",
+        "3M": "past 3 months",
+        "6M": "past 6 months",
+        "1Y": "past year",
+        "ALL": "all time",
+      };
+      changePeriodEl.textContent = `over ${rangeLabels[currentTimeRange] || "selected timeline"}`;
+      statsSummaryEl.classList.remove("hidden");
+    } else if (totalCount === 1) {
+      changeBadgeEl.textContent = "0.0 kg (0.0%)";
+      changeBadgeEl.className = "stat-badge neutral";
+      changePeriodEl.textContent = "single entry in selected timeline";
+      statsSummaryEl.classList.remove("hidden");
+    } else {
+      statsSummaryEl.classList.add("hidden");
+    }
+  }
+
   if (chart) {
     chart.destroy();
   }
