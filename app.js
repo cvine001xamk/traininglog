@@ -81,17 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const formatRepsHTML = (exercise) => {
-    if (exercise.repList && Array.isArray(exercise.repList) && exercise.repList.length > 0) {
-      const allSame = exercise.repList.every((r) => r === exercise.repList[0]);
-      if (allSame) {
-        return `${exercise.sets} &times; ${exercise.reps}`;
-      }
-      return `[${exercise.repList.join(", ")}] reps`;
-    }
-    return `${exercise.sets} &times; ${exercise.reps}`;
-  };
-
   // --- RENDER FUNCTIONS ---
   const renderCurrentWorkout = async () => {
     currentWorkoutList.innerHTML = "";
@@ -115,16 +104,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const contentDiv = document.createElement("div");
       contentDiv.style.flex = "1";
 
-      const repText = formatRepsHTML(exercise);
       if (plates) {
         let platesText = `${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar`;
         if (plates.plates && plates.plates.length > 0) {
           const plateWeights = plates.plates.map((p) => p.weight || p);
           platesText += ` [${plateWeights.join(", ")}]`;
         }
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${repText}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       } else {
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${repText}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
       }
 
       const editBtn = document.createElement("button");
@@ -141,12 +129,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("weight").value = exercise.weight;
         document.getElementById("sets").value = exercise.sets;
         document.getElementById("reps").value = exercise.reps;
-        if (exercise.repList) {
-          currentRepList = [...exercise.repList];
-          renderRepBadges();
-        } else {
-          syncRepListFromInput();
-        }
 
         await updatePlateVisualizer();
         document.getElementById("weight").focus();
@@ -477,136 +459,6 @@ document.addEventListener("DOMContentLoaded", () => {
     plateVisualizer.style.display = "flex";
   };
 
-  const setsInput = document.getElementById("sets");
-  const repsInput = document.getElementById("reps");
-  const perSetRepsContainer = document.getElementById("per-set-reps-container");
-  const repBadgesWrapper = document.getElementById("rep-badges-wrapper");
-  const addSetBtn = document.getElementById("add-set-btn");
-  const removeSetBtn = document.getElementById("remove-set-btn");
-
-  let currentRepList = [];
-
-  const syncRepListFromInput = () => {
-    const numSets = parseInt(setsInput.value, 10);
-    const numReps = parseInt(repsInput.value, 10);
-
-    if (isNaN(numSets) || numSets <= 0 || isNaN(numReps) || numReps < 0) {
-      perSetRepsContainer.classList.add("hidden");
-      currentRepList = [];
-      return;
-    }
-
-    perSetRepsContainer.classList.remove("hidden");
-
-    if (currentRepList.length < numSets) {
-      const fillVal = !isNaN(numReps) && numReps > 0 ? numReps : (currentRepList[currentRepList.length - 1] || 5);
-      while (currentRepList.length < numSets) {
-        currentRepList.push(fillVal);
-      }
-    } else if (currentRepList.length > numSets) {
-      currentRepList = currentRepList.slice(0, numSets);
-    }
-
-    renderRepBadges();
-  };
-
-  const renderRepBadges = () => {
-    repBadgesWrapper.innerHTML = "";
-    if (currentRepList.length === 0) {
-      perSetRepsContainer.classList.add("hidden");
-      return;
-    }
-
-    perSetRepsContainer.classList.remove("hidden");
-
-    currentRepList.forEach((repCount, i) => {
-      const card = document.createElement("div");
-      card.className = "rep-badge-card";
-      card.setAttribute("title", `Set ${i + 1}: ${repCount} reps (Drag up/down to change)`);
-      card.innerHTML = `
-        <span class="set-num">Set ${i + 1}</span>
-        <span class="rep-val">${repCount}</span>
-        <span class="swipe-hint">↕ drag</span>
-      `;
-
-      let startY = 0;
-      let startRep = 0;
-      let isDragging = false;
-
-      const onPointerDown = (e) => {
-        e.preventDefault();
-        startY = e.clientY;
-        startRep = currentRepList[i];
-        isDragging = true;
-        card.classList.add("dragging");
-        card.setPointerCapture(e.pointerId);
-      };
-
-      const onPointerMove = (e) => {
-        if (!isDragging) return;
-        const deltaY = startY - e.clientY;
-        const step = Math.round(deltaY / 15);
-        const newRep = Math.max(0, startRep + step);
-        if (newRep !== currentRepList[i]) {
-          currentRepList[i] = newRep;
-          card.querySelector(".rep-val").textContent = newRep;
-        }
-      };
-
-      const onPointerUp = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        card.classList.remove("dragging");
-        try { card.releasePointerCapture(e.pointerId); } catch (err) {}
-      };
-
-      const onWheel = (e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        const newRep = Math.max(0, currentRepList[i] + delta);
-        if (newRep !== currentRepList[i]) {
-          currentRepList[i] = newRep;
-          card.querySelector(".rep-val").textContent = newRep;
-        }
-      };
-
-      card.addEventListener("pointerdown", onPointerDown);
-      card.addEventListener("pointermove", onPointerMove);
-      card.addEventListener("pointerup", onPointerUp);
-      card.addEventListener("pointercancel", onPointerUp);
-      card.addEventListener("wheel", onWheel, { passive: false });
-
-      repBadgesWrapper.appendChild(card);
-    });
-  };
-
-  setsInput.addEventListener("input", syncRepListFromInput);
-  repsInput.addEventListener("input", () => {
-    const defaultReps = parseInt(repsInput.value, 10);
-    if (!isNaN(defaultReps) && defaultReps > 0) {
-      if (currentRepList.length === 0 || currentRepList.every((r) => r === currentRepList[0])) {
-        currentRepList = Array(parseInt(setsInput.value, 10) || 1).fill(defaultReps);
-      }
-    }
-    syncRepListFromInput();
-  });
-
-  addSetBtn.addEventListener("click", () => {
-    const defaultReps = parseInt(repsInput.value, 10) || 5;
-    const lastReps = currentRepList.length > 0 ? currentRepList[currentRepList.length - 1] : defaultReps;
-    currentRepList.push(lastReps);
-    setsInput.value = currentRepList.length;
-    renderRepBadges();
-  });
-
-  removeSetBtn.addEventListener("click", () => {
-    if (currentRepList.length > 1) {
-      currentRepList.pop();
-      setsInput.value = currentRepList.length;
-      renderRepBadges();
-    }
-  });
-
   weightInput.addEventListener("input", updatePlateVisualizer);
 
   // Merged into one listener — both run in parallel on exercise change
@@ -639,21 +491,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const finalRepList = currentRepList.length > 0 ? [...currentRepList] : Array(sets).fill(reps);
-
     const exerciseData = await db.exercises.get({ name: exerciseName });
     const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
 
     currentWorkout.push({
       exercise: exerciseName,
       weight: weight,
-      sets: finalRepList.length,
+      sets: sets,
       reps: reps,
-      repList: finalRepList,
       barWeight: barWeight,
     });
-    currentRepList = [];
-    perSetRepsContainer.classList.add("hidden");
     await renderCurrentWorkout();
     await renderExerciseOptions();
     addExerciseForm.reset();

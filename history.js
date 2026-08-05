@@ -129,16 +129,7 @@ const createWorkoutArticle = (workout) => {
     exDiv.appendChild(exerciseName);
 
     const details = document.createElement("span");
-    if (ex.repList && Array.isArray(ex.repList) && ex.repList.length > 0) {
-      const allSame = ex.repList.every((r) => r === ex.repList[0]);
-      if (allSame) {
-        details.textContent = `${ex.weight}kg × ${ex.sets} × ${ex.reps}`;
-      } else {
-        details.textContent = `${ex.weight}kg × [${ex.repList.join(", ")}] reps`;
-      }
-    } else {
-      details.textContent = `${ex.weight}kg × ${ex.sets} × ${ex.reps}`;
-    }
+    details.textContent = `${ex.weight}kg × ${ex.sets} × ${ex.reps}`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);
   });
@@ -157,13 +148,11 @@ const showEditView = (article, workout) => {
     const form = document.createElement("form");
     form.className = "grid edit-form";
     form.dataset.index = index;
-
-    const repListStr = (ex.repList && Array.isArray(ex.repList)) ? ex.repList.join(", ") : "";
     form.innerHTML = `
               <input type="text" value="${ex.exercise}" data-field="exercise" disabled aria-label="Exercise name">
               <input type="number" value="${ex.weight}" data-field="weight" step="any" inputmode="decimal" placeholder="Weight (kg)" aria-label="Weight (kg)">
               <input type="number" value="${ex.sets}" data-field="sets" inputmode="numeric" placeholder="Sets" aria-label="Sets">
-              <input type="text" value="${repListStr || ex.reps}" data-field="reps" inputmode="text" placeholder="Reps (e.g. 5,4,3)" aria-label="Reps">
+              <input type="number" value="${ex.reps}" data-field="reps" inputmode="numeric" placeholder="Reps" aria-label="Reps">
           `;
     exercisesContainer.appendChild(form);
   });
@@ -208,20 +197,11 @@ const showEditView = (article, workout) => {
         barWeight = exerciseData ? exerciseData.barWeight || 20 : 20;
       }
 
-      // Parse repList: supports comma-separated (e.g. "5,4,3") or single number
-      let repList = null;
-      if (rawReps.includes(",")) {
-        repList = rawReps.split(",").map((r) => parseInt(r.trim(), 10)).filter((r) => !isNaN(r));
-      } else if (!isNaN(reps) && !isNaN(sets) && sets > 0) {
-        repList = Array(sets).fill(reps);
-      }
-
       updatedExercises.push({
         exercise: exerciseName,
         weight: weight,
-        sets: repList ? repList.length : sets,
+        sets: sets,
         reps: reps,
-        repList: repList || [],
         barWeight: barWeight,
       });
     }
