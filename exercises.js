@@ -19,6 +19,8 @@ let chartGoalToggle;
 let chartGoalRow;
 let rangeButtons;
 let currentTimeRange = "ALL";
+let toggleVolumeBtn;
+let showVolume = localStorage.getItem("showVolumeGraph") === "true";
 
 export function initExercises() {
   exerciseList = document.getElementById("exercise-list");
@@ -29,6 +31,7 @@ export function initExercises() {
   exercisesView = document.getElementById("exercises");
   chartTitle = document.getElementById("chart-title");
   resetZoomBtn = document.getElementById("reset-zoom-btn");
+  toggleVolumeBtn = document.getElementById("toggle-volume-btn");
   goalWeightInput = document.getElementById("goal-weight-input");
   saveGoalBtn = document.getElementById("save-goal-btn");
   plateList = document.getElementById("plate-list");
@@ -37,8 +40,21 @@ export function initExercises() {
   chartGoalRow = document.getElementById("chart-goal-row");
   rangeButtons = document.querySelectorAll(".range-btn");
 
+  if (toggleVolumeBtn) {
+    if (showVolume) toggleVolumeBtn.classList.add("active");
+  }
+
   // Initialize event listeners only once
   if (!initExercises.initialized) {
+    if (toggleVolumeBtn) {
+      toggleVolumeBtn.addEventListener("click", () => {
+        showVolume = !showVolume;
+        localStorage.setItem("showVolumeGraph", showVolume ? "true" : "false");
+        toggleVolumeBtn.classList.toggle("active", showVolume);
+        if (currentChartExercise) renderChart(currentChartExercise);
+      });
+    }
+
     resetZoomBtn.addEventListener("click", () => {
       if (chart) chart.resetZoom();
     });
@@ -294,19 +310,35 @@ const renderChart = async (exerciseName) => {
 
   // Stream workouts via cursor — avoids loading entire array into RAM
   const dailyMaxMap = new Map();
+  const dailyVolumeMap = new Map();
   await db.workouts.orderBy("date").each((w) => {
     const exerciseSets = w.exercises.filter((ex) => ex.exercise === exerciseName);
     if (exerciseSets.length === 0) return;
-    const maxWeight = Math.max(...exerciseSets.map((ex) => parseFloat(ex.weight)));
+    const maxWeight = Math.max(...exerciseSets.map((ex) => parseFloat(ex.weight) || 0));
     const dateKey = new Date(w.date).setHours(0, 0, 0, 0);
     if (!dailyMaxMap.has(dateKey) || dailyMaxMap.get(dateKey) < maxWeight) {
       dailyMaxMap.set(dateKey, maxWeight);
     }
+
+    const setVol = exerciseSets.reduce((acc, ex) => {
+      const weight = parseFloat(ex.weight) || 0;
+      // Use per-set repList when available for accurate volume
+      if (ex.repList && Array.isArray(ex.repList) && ex.repList.length > 0) {
+        return acc + ex.repList.reduce((sum, r) => sum + weight * (parseFloat(r) || 0), 0);
+      }
+      // Fallback for legacy entries without repList
+      const sets = parseFloat(ex.sets) || 0;
+      const reps = parseFloat(ex.reps) || 0;
+      return acc + (weight * sets * reps);
+    }, 0);
+    dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + setVol);
   });
 
   let exerciseHistory = Array.from(dailyMaxMap.entries())
     .map(([time, weight]) => ({ x: time, y: weight }))
     .sort((a, b) => a.x - b.x);
+
+  let volumeHistoryMap = new Map(dailyVolumeMap.entries());
 
   // Apply time range filter
   if (currentTimeRange !== "ALL") {
@@ -320,6 +352,11 @@ const renderChart = async (exerciseName) => {
     const cutoffTime = cutoff.getTime();
     exerciseHistory = exerciseHistory.filter(d => d.x >= cutoffTime);
   }
+
+  const volumeHistory = exerciseHistory.map((d) => ({
+    x: d.x,
+    y: volumeHistoryMap.get(d.x) || 0,
+  }));
 
   // Update change stats summary badge
   const statsSummaryEl = document.getElementById("chart-stats-summary");
@@ -389,7 +426,9 @@ const renderChart = async (exerciseName) => {
     chart.destroy();
   }
 
-  chartTitle.textContent = `${exerciseName} - Weight History`;
+  chartTitle.textContent = showVolume
+    ? `${exerciseName} - Weight & Volume`
+    : `${exerciseName} - Weight History`;
 
   const options = {
     responsive: true,
@@ -402,6 +441,8 @@ const renderChart = async (exerciseName) => {
     },
     scales: {
       y: {
+        type: "linear",
+        position: "left",
         // beginAtZero: false lets the chart zoom in on actual data range so
         // even small progress is visible rather than dwarfed by a 0 baseline.
         beginAtZero: false,
@@ -413,7 +454,27 @@ const renderChart = async (exerciseName) => {
           color: "#99aab5",
           font: { size: 12 },
           maxTicksLimit: 6,
-        }
+          callback: (val) => `${val} kg`,
+        },
+      },
+      y1: {
+        type: "linear",
+        position: "right",
+        display: showVolume,
+        beginAtZero: true,
+        grace: "15%",
+        grid: {
+          drawOnChartArea: false, // Prevents dual grid lines from cluttering graph
+        },
+        ticks: {
+          color: "#b085c7",
+          font: { size: 11 },
+          maxTicksLimit: 5,
+          callback: (val) => {
+            if (val >= 1000) return `${(val / 1000).toFixed(1)}k kg`;
+            return `${val} kg`;
+          },
+        },
       },
       x: {
         type: "time",
@@ -486,30 +547,50 @@ const renderChart = async (exerciseName) => {
     },
   };
 
+  const datasets = [
+    {
+      type: "line",
+      label: "Max Weight (kg)",
+      data: exerciseHistory,
+      borderColor: "#3399ff",
+      backgroundColor: "rgba(51, 153, 255, 0.15)",
+      tension: 0.3,
+      fill: true,
+      // Smaller resting radius so dense points don't overlap;
+      // large hover radius for easy fat-finger tapping.
+      pointRadius: 4,
+      pointHoverRadius: 12,
+      pointBackgroundColor: "#3399ff",
+      pointHoverBackgroundColor: "#fff",
+      pointBorderWidth: 0,
+      pointHoverBorderWidth: 2,
+      pointHoverBorderColor: "#3399ff",
+      borderWidth: 2.5,
+      yAxisID: "y",
+      order: 1,
+    },
+  ];
+
+  if (showVolume) {
+    datasets.push({
+      type: "bar",
+      label: "Total Volume (kg)",
+      data: volumeHistory,
+      backgroundColor: "rgba(155, 89, 182, 0.3)",
+      borderColor: "rgba(155, 89, 182, 0.6)",
+      borderWidth: 1,
+      borderRadius: 4,
+      barPercentage: 0.5,
+      yAxisID: "y1",
+      order: 2,
+    });
+  }
+
   const ctx = document.getElementById("exercise-chart").getContext("2d");
   chart = new Chart(ctx, {
     type: "line",
     data: {
-      datasets: [
-        {
-          label: "Weight (kg)",
-          data: exerciseHistory,
-          borderColor: "#3399ff",
-          backgroundColor: "rgba(51, 153, 255, 0.15)",
-          tension: 0.3,
-          fill: true,
-          // Smaller resting radius so dense points don't overlap;
-          // large hover radius for easy fat-finger tapping.
-          pointRadius: 4,
-          pointHoverRadius: 12,
-          pointBackgroundColor: "#3399ff",
-          pointHoverBackgroundColor: "#fff",
-          pointBorderWidth: 0,
-          pointHoverBorderWidth: 2,
-          pointHoverBorderColor: "#3399ff",
-          borderWidth: 2.5,
-        },
-      ],
+      datasets: datasets,
     },
     options: options,
   });

@@ -676,6 +676,33 @@ article header {
   justify-content: center;
 }
 
+.chart-toggle-btn {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--secondary-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.chart-toggle-btn.active {
+  background: rgba(155, 89, 182, 0.25);
+  color: #d19fe8;
+  border-color: rgba(155, 89, 182, 0.6);
+}
+
 /* Chart stats summary */
 .chart-stats-summary {
   display: flex;
@@ -759,6 +786,116 @@ article header {
 
 .add-exercise-grid input {
   margin-top: auto;
+}
+
+/* Per-set Reps breakdown styles */
+.per-set-reps-container {
+  margin: 0.5rem 0 1rem 0;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.per-set-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.per-set-header label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+}
+
+.per-set-header small {
+  font-weight: 400;
+  color: #8899a6;
+  margin-left: 0.2rem;
+}
+
+.per-set-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.set-adjust-btn {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--secondary-color);
+  min-height: 26px;
+}
+
+.set-adjust-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.rep-badges-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.rep-badge-card {
+  user-select: none;
+  touch-action: none; /* Prevents touch scrolling while swiping reps up/down */
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.6rem;
+  min-width: 58px;
+  background: rgba(51, 153, 255, 0.12);
+  border: 1px solid rgba(51, 153, 255, 0.35);
+  border-radius: 8px;
+  color: #fff;
+  cursor: ns-resize;
+  transition: transform 0.1s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.rep-badge-card:hover {
+  background: rgba(51, 153, 255, 0.22);
+  border-color: rgba(51, 153, 255, 0.6);
+}
+
+.rep-badge-card.dragging {
+  transform: scale(1.06);
+  background: rgba(51, 153, 255, 0.35);
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(51, 153, 255, 0.3);
+}
+
+.rep-badge-card .set-num {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  color: #88aacc;
+  font-weight: 700;
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+.rep-badge-card .rep-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.rep-badge-card .swipe-hint {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  margin-top: 2px;
 }
 
 /* Barbell visualizer styles */
