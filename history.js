@@ -41,8 +41,17 @@ export async function renderHistory() {
 
   const total = await db.workouts.count();
   if (total === 0) {
-    historyList.innerHTML =
-      '<p class="text-center">No workouts logged yet.</p>';
+    historyList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🏋️</div>
+        <h3>No workouts yet</h3>
+        <p>Your journey starts with one rep.<br>Log your first workout to see it here.</p>
+        <button id="empty-state-cta" class="empty-state-btn">Log Your First Workout →</button>
+      </div>
+    `;
+    document.getElementById("empty-state-cta")?.addEventListener("click", () => {
+      document.getElementById("log-view-btn").click();
+    });
     return;
   }
 

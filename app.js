@@ -1,5 +1,5 @@
 // app.js
-import { db, calculatePlates, showAlert } from "./utils.js";
+import { db, calculatePlates, showAlert, showSuccessToast } from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
 
@@ -510,6 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   saveWorkoutBtn.addEventListener("click", async () => {
     if (currentWorkout.length === 0) return;
+    const exerciseCount = currentWorkout.length;
     await db.workouts.add({
       date: new Date().toISOString(),
       exercises: currentWorkout,
@@ -517,7 +518,8 @@ document.addEventListener("DOMContentLoaded", () => {
     currentWorkout = [];
     await renderCurrentWorkout();
     await renderExerciseOptions();
-    showHistoryView();
+    showSuccessToast(`Workout saved! ${exerciseCount} ${exerciseCount === 1 ? 'exercise' : 'exercises'} logged 💪`);
+    setTimeout(() => showHistoryView(), 400);
   });
 
   // --- INITIALIZATION ---

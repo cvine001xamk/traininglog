@@ -277,3 +277,24 @@ export function parseCSVLine(line) {
   fields.push(current);
   return fields;
 }
+
+export function showSuccessToast(message) {
+  const existing = document.querySelector(".success-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.className = "success-toast";
+  toast.innerHTML = `
+    <div class="success-toast-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </div>
+    <span>${message}</span>
+  `;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("toast-out");
+    toast.addEventListener("animationend", () => toast.remove());
+  }, 2200);
+}
+
