@@ -84,7 +84,7 @@ Here are planned features and improvements to be implemented in future iteration
 - [ ] **Workout Templates & Routines**: Support creating, saving, and launching pre-configured routine templates (e.g. 5/3/1, Push/Pull/Legs).
 - [x] **Calculated 1RM & PR Badges**: Automatically compute estimated 1-Rep Max (Epley formula) and trigger personal record (PR) celebration notifications.
 - [x] **Native PWA Background Notifications**: Background Service Worker notifications when the rest timer finishes.
-- [ ] **Total Workout Volume Tracking**: Display total tonnage/volume ($Weight \times Sets \times Reps$) in workout history and summary analytics.
+- [x] **Total Workout Volume Tracking**: Display total tonnage/volume ($Weight \times Sets \times Reps$) in workout history and summary analytics.
 - [ ] **Cloud Sync / Backup**: Optional cloud synchronization (e.g., Google Drive or custom backend integration) alongside IndexedDB storage.
 - [ ] **Dark / Light Theme Toggle**: User setting to switch between dark and light UI themes.
 

@@ -4,6 +4,7 @@ import {
   showAlert,
   showSuccessToast,
   calculate1RM,
+  calculateVolume,
   getExerciseHistoricalStats,
   showPRToast,
 } from "./utils.js";
@@ -111,15 +112,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const contentDiv = document.createElement("div");
       contentDiv.style.flex = "1";
 
+      const exVolume = calculateVolume(exercise.weight, exercise.sets, exercise.reps);
+
       if (plates) {
         let platesText = `${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar`;
         if (plates.plates && plates.plates.length > 0) {
           const plateWeights = plates.plates.map((p) => p.weight || p);
           platesText += ` [${plateWeights.join(", ")}]`;
         }
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps} <span class="volume-info">${exVolume}kg vol</span></p>`;
       } else {
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps}</p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps} <span class="volume-info">${exVolume}kg vol</span></p>`;
       }
 
       const editBtn = document.createElement("button");
@@ -149,6 +152,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (currentWorkout.length > 0) {
       currentWorkoutList.appendChild(fragment);
+
+      // Add total session volume footer
+      const totalVolume = currentWorkout.reduce((sum, ex) => sum + calculateVolume(ex.weight, ex.sets, ex.reps), 0);
+      const volumeFooter = document.createElement("div");
+      volumeFooter.className = "workout-volume-footer";
+      const formattedVolume = totalVolume >= 1000
+        ? `${(totalVolume / 1000).toFixed(1)}t`
+        : `${totalVolume}kg`;
+      volumeFooter.innerHTML = `<span class="volume-icon">📊</span> Session Volume: <strong>${formattedVolume}</strong>`;
+      currentWorkoutList.appendChild(volumeFooter);
     }
   };
 

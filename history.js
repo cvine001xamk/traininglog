@@ -1,5 +1,5 @@
 // history.js
-import { db, formatDate, showConfirm, parseCSVLine, calculate1RM } from "./utils.js";
+import { db, formatDate, showConfirm, parseCSVLine, calculate1RM, calculateVolume } from "./utils.js";
 
 let historyList;
 let importBtn;
@@ -129,6 +129,7 @@ const createWorkoutArticle = (workout) => {
 
   const exercisesContainer = document.createElement("div");
   exercisesContainer.className = "exercises-container";
+  let totalWorkoutVolume = 0;
   workout.exercises.forEach((ex) => {
     const exDiv = document.createElement("div");
 
@@ -145,12 +146,23 @@ const createWorkoutArticle = (workout) => {
     }
 
     const est1RM = ex.est1RM || calculate1RM(ex.weight, ex.reps);
+    const exVolume = calculateVolume(ex.weight, ex.sets, ex.reps);
+    totalWorkoutVolume += exVolume;
     const details = document.createElement("span");
-    details.innerHTML = `${ex.weight}kg × ${ex.sets} × ${ex.reps} <span class="est-1rm-info">(1RM: ${est1RM}kg)</span>`;
+    details.innerHTML = `${ex.weight}kg × ${ex.sets} × ${ex.reps} <span class="est-1rm-info">(1RM: ${est1RM}kg)</span> <span class="volume-info">${exVolume}kg vol</span>`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);
   });
   article.appendChild(exercisesContainer);
+
+  // Total workout volume footer
+  const volumeFooter = document.createElement("div");
+  volumeFooter.className = "workout-volume-footer";
+  const formattedVolume = totalWorkoutVolume >= 1000
+    ? `${(totalWorkoutVolume / 1000).toFixed(1)}t`
+    : `${totalWorkoutVolume}kg`;
+  volumeFooter.innerHTML = `<span class="volume-icon">📊</span> Total Volume: <strong>${formattedVolume}</strong>`;
+  article.appendChild(volumeFooter);
 
   return article;
 };

@@ -1,5 +1,5 @@
 // exercises.js
-import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache, calculate1RM } from "./utils.js";
+import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache, calculate1RM, calculateVolume } from "./utils.js";
 
 let exerciseList;
 let addNewExerciseForm;
@@ -295,6 +295,7 @@ const renderChart = async (exerciseName) => {
   // Stream workouts via cursor — avoids loading entire array into RAM
   const dailyMaxMap = new Map();
   const daily1RMMap = new Map();
+  const dailyVolumeMap = new Map();
 
   await db.workouts.orderBy("date").each((w) => {
     const exerciseSets = w.exercises.filter((ex) => ex.exercise === exerciseName);
@@ -302,6 +303,9 @@ const renderChart = async (exerciseName) => {
     const maxWeight = Math.max(...exerciseSets.map((ex) => parseFloat(ex.weight)));
     const max1RM = Math.max(
       ...exerciseSets.map((ex) => ex.est1RM || calculate1RM(ex.weight, ex.reps)),
+    );
+    const totalVolume = exerciseSets.reduce(
+      (sum, ex) => sum + calculateVolume(ex.weight, ex.sets, ex.reps), 0
     );
 
     const dateKey = new Date(w.date).setHours(0, 0, 0, 0);
@@ -311,6 +315,8 @@ const renderChart = async (exerciseName) => {
     if (!daily1RMMap.has(dateKey) || daily1RMMap.get(dateKey) < max1RM) {
       daily1RMMap.set(dateKey, max1RM);
     }
+    // Accumulate volume for the same day (multiple sessions)
+    dailyVolumeMap.set(dateKey, (dailyVolumeMap.get(dateKey) || 0) + totalVolume);
   });
 
   let exerciseHistory = Array.from(dailyMaxMap.entries())
@@ -319,6 +325,10 @@ const renderChart = async (exerciseName) => {
 
   let est1RMHistory = Array.from(daily1RMMap.entries())
     .map(([time, rm]) => ({ x: time, y: rm }))
+    .sort((a, b) => a.x - b.x);
+
+  let volumeHistory = Array.from(dailyVolumeMap.entries())
+    .map(([time, vol]) => ({ x: time, y: vol }))
     .sort((a, b) => a.x - b.x);
 
   // Apply time range filter
@@ -333,6 +343,7 @@ const renderChart = async (exerciseName) => {
     const cutoffTime = cutoff.getTime();
     exerciseHistory = exerciseHistory.filter(d => d.x >= cutoffTime);
     est1RMHistory = est1RMHistory.filter(d => d.x >= cutoffTime);
+    volumeHistory = volumeHistory.filter(d => d.x >= cutoffTime);
   }
 
   // Update change stats summary badge
@@ -454,6 +465,28 @@ const renderChart = async (exerciseName) => {
           minRotation: 0,
         }
       },
+      yVolume: {
+        position: "right",
+        beginAtZero: true,
+        grace: "10%",
+        grid: {
+          drawOnChartArea: false,
+        },
+        ticks: {
+          color: "rgba(51, 153, 255, 0.4)",
+          font: { size: 11 },
+          maxTicksLimit: 5,
+          callback: function(value) {
+            return value >= 1000 ? (value / 1000).toFixed(1) + 't' : value + 'kg';
+          },
+        },
+        title: {
+          display: true,
+          text: 'Volume',
+          color: 'rgba(51, 153, 255, 0.4)',
+          font: { size: 10 },
+        },
+      },
     },
     plugins: {
       legend: {
@@ -527,6 +560,7 @@ const renderChart = async (exerciseName) => {
           pointHoverBorderWidth: 2,
           pointHoverBorderColor: "#3399ff",
           borderWidth: 2.5,
+          order: 0,
         },
         {
           label: "Est. 1RM (kg)",
@@ -544,6 +578,20 @@ const renderChart = async (exerciseName) => {
           pointHoverBorderWidth: 2,
           pointHoverBorderColor: "#ffd700",
           borderWidth: 2,
+          order: 0,
+        },
+        {
+          label: "Volume (kg)",
+          type: "bar",
+          data: volumeHistory,
+          yAxisID: "yVolume",
+          backgroundColor: "rgba(51, 153, 255, 0.18)",
+          borderColor: "rgba(51, 153, 255, 0.3)",
+          borderWidth: 1,
+          borderRadius: 3,
+          barPercentage: 0.6,
+          categoryPercentage: 0.8,
+          order: 1,
         },
       ],
     },

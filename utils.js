@@ -307,6 +307,15 @@ export function calculate1RM(weight, reps) {
   return Math.round(w * (1 + r / 30) * 10) / 10;
 }
 
+// Volume calculation: Weight × Sets × Reps (total tonnage in kg)
+export function calculateVolume(weight, sets, reps) {
+  const w = parseFloat(weight);
+  const s = parseInt(sets, 10);
+  const r = parseInt(reps, 10);
+  if (isNaN(w) || w <= 0 || isNaN(s) || s <= 0 || isNaN(r) || r <= 0) return 0;
+  return Math.round(w * s * r * 10) / 10;
+}
+
 // Helper to fetch max weight and max 1RM recorded for an exercise
 export async function getExerciseHistoricalStats(exerciseName) {
   let maxWeight = 0;

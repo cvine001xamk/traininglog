@@ -1186,3 +1186,36 @@ dialog::backdrop {
   100% { transform: scale(1) rotate(0); }
 }
 
+/* Volume tracking styles */
+.volume-info {
+  font-size: 0.78rem;
+  color: var(--primary-color);
+  margin-left: 0.4rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.workout-volume-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: linear-gradient(135deg, rgba(51, 153, 255, 0.1), rgba(103, 0, 163, 0.15));
+  border: 1px solid rgba(51, 153, 255, 0.25);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+  font-weight: 500;
+}
+
+.workout-volume-footer strong {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.volume-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
