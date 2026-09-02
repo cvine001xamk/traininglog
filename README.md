@@ -33,6 +33,7 @@ A lightweight, privacy-focused Progressive Web Application (PWA) designed for st
 
 ### 📱 5. PWA & Mobile UX
 - **Offline Support**: Service Worker (`sw.js`) enables full functionality without an active internet connection.
+- **Background Rest Timer Notifications**: Native PWA notifications scheduled via Service Worker (`showNotification`) that alert you when rest intervals complete—even when the app is minimized or the screen is locked.
 - **Installable PWA**: Modern web app manifest allowing setup as a standalone desktop or mobile application.
 - **Mobile-Optimized Interface**: Clean bottom-navigation bar, custom modal dialogs, non-intrusive toast notifications, and iOS-optimized touch interactions.
 
@@ -82,9 +83,9 @@ Here are planned features and improvements to be implemented in future iteration
 - [ ] **Warm-up Set Calculator**: Automatically suggest warm-up sets and plate loadings leading up to the working weight.
 - [ ] **Workout Templates & Routines**: Support creating, saving, and launching pre-configured routine templates (e.g. 5/3/1, Push/Pull/Legs).
 - [x] **Calculated 1RM & PR Badges**: Automatically compute estimated 1-Rep Max (Epley formula) and trigger personal record (PR) celebration notifications.
+- [x] **Native PWA Background Notifications**: Background Service Worker notifications when the rest timer finishes.
 - [ ] **Total Workout Volume Tracking**: Display total tonnage/volume ($Weight \times Sets \times Reps$) in workout history and summary analytics.
 - [ ] **Cloud Sync / Backup**: Optional cloud synchronization (e.g., Google Drive or custom backend integration) alongside IndexedDB storage.
-- [ ] **Rest Timer Customization**: Configurable audio chimes, vibration alerts, and native PWA background notifications when the rest timer finishes.
 - [ ] **Dark / Light Theme Toggle**: User setting to switch between dark and light UI themes.
 
 ---

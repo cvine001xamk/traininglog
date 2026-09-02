@@ -1,4 +1,4 @@
-const CACHE_NAME = "training-log-cache-v35";
+const CACHE_NAME = "training-log-cache-v36";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -85,3 +85,54 @@ self.addEventListener("activate", (event) => {
     ]),
   );
 });
+
+// Background Rest Timer Notifications
+let activeTimerTimeout = null;
+
+self.addEventListener("message", (event) => {
+  if (!event.data) return;
+
+  if (event.data.type === "SCHEDULE_TIMER") {
+    if (activeTimerTimeout) {
+      clearTimeout(activeTimerTimeout);
+      activeTimerTimeout = null;
+    }
+
+    const delayMs = Math.max(0, event.data.targetEndTime - Date.now());
+
+    activeTimerTimeout = setTimeout(() => {
+      activeTimerTimeout = null;
+      self.registration.showNotification("Rest Timer Finished! ⏱️", {
+        body: "Rest time is up! Ready for your next set 💪",
+        icon: "static/logos/logo192.png",
+        badge: "static/logos/logo192.png",
+        tag: "rest-timer-notification",
+        renotify: true,
+        data: { url: "./index.html" },
+      });
+    }, delayMs);
+  } else if (event.data.type === "CANCEL_TIMER") {
+    if (activeTimerTimeout) {
+      clearTimeout(activeTimerTimeout);
+      activeTimerTimeout = null;
+    }
+  }
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url && "focus" in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow("./index.html");
+      }
+    }),
+  );
+});
+

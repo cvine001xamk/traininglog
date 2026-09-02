@@ -273,9 +273,25 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(timerInterval);
       timerInterval = null;
       releaseWakeLock();
+      postSWMessage({ type: "CANCEL_TIMER" });
+
       if ("vibrate" in navigator) {
         navigator.vibrate([300, 150, 300, 150, 300]);
       }
+
+      // If app is currently hidden/in background, trigger fallback Notification
+      if (document.visibilityState === "hidden" && "Notification" in window && Notification.permission === "granted") {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification("Rest Timer Finished! ⏱️", {
+            body: "Rest time is up! Ready for your next set 💪",
+            icon: "static/logos/logo192.png",
+            badge: "static/logos/logo192.png",
+            tag: "rest-timer-notification",
+            renotify: true,
+          });
+        }).catch(() => {});
+      }
+
       return;
     }
     const m = Math.floor(timeRemaining / 60)
@@ -285,9 +301,19 @@ document.addEventListener("DOMContentLoaded", () => {
     timerDisplay.textContent = `${m}:${s}`;
   };
 
+  const postSWMessage = (msg) => {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(msg);
+    }
+  };
+
   timerBadge.addEventListener("click", async () => {
     await preloadTimerCues();
     await unlockAudio();
+
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
 
     if (!timerInterval) {
       timeRemaining = 60;
@@ -302,6 +328,8 @@ document.addEventListener("DOMContentLoaded", () => {
       targetEndTime += 60000;
       updateTimerDisplay();
     }
+
+    postSWMessage({ type: "SCHEDULE_TIMER", targetEndTime: targetEndTime });
   });
 
   const createAudioContext = () => {
@@ -370,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     if (timerInterval) {
       targetEndTime = 0;
+      postSWMessage({ type: "CANCEL_TIMER" });
       updateTimerDisplay();
     }
   });
