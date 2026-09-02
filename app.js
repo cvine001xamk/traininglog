@@ -1,5 +1,12 @@
-// app.js
-import { db, calculatePlates, showAlert, showSuccessToast } from "./utils.js";
+import {
+  db,
+  calculatePlates,
+  showAlert,
+  showSuccessToast,
+  calculate1RM,
+  getExerciseHistoricalStats,
+  showPRToast,
+} from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
 
@@ -169,7 +176,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     let lastWeight = null;
+    let lastReps = null;
     let maxWeight = 0;
+    let max1RM = 0;
 
     // Stream through workouts with a cursor (.each) instead of loading all into RAM (.toArray)
     await db.workouts
@@ -180,8 +189,13 @@ document.addEventListener("DOMContentLoaded", () => {
           (ex) => ex.exercise === exerciseName,
         );
         if (exercise) {
-          if (lastWeight === null) lastWeight = exercise.weight; // first match = most recent
+          if (lastWeight === null) {
+            lastWeight = exercise.weight;
+            lastReps = exercise.reps;
+          }
           if (exercise.weight > maxWeight) maxWeight = exercise.weight;
+          const e1RM = exercise.est1RM || calculate1RM(exercise.weight, exercise.reps);
+          if (e1RM > max1RM) max1RM = e1RM;
         }
       });
 
@@ -189,11 +203,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const exerciseData = await db.exercises.get({ name: exerciseName });
       const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
       const plates = await calculatePlates(lastWeight, barWeight);
+      const est1RM = calculate1RM(lastWeight, lastReps || 1);
+
       let infoText = `Last: ${lastWeight}kg`;
       if (plates) {
         infoText += ` (${plates.weightPerSide}kg/side)`;
       }
-      infoText += ` | Max: ${maxWeight}kg`;
+      infoText += ` | Max: ${maxWeight}kg | Est. 1RM: ${max1RM > 0 ? max1RM : est1RM}kg`;
       lastWeightInfo.textContent = infoText;
     } else {
       lastWeightInfo.textContent = "";
@@ -493,6 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const exerciseData = await db.exercises.get({ name: exerciseName });
     const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
+    const est1RM = calculate1RM(weight, reps);
 
     currentWorkout.push({
       exercise: exerciseName,
@@ -500,6 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sets: sets,
       reps: reps,
       barWeight: barWeight,
+      est1RM: est1RM,
     });
     await renderCurrentWorkout();
     await renderExerciseOptions();
@@ -511,14 +529,44 @@ document.addEventListener("DOMContentLoaded", () => {
   saveWorkoutBtn.addEventListener("click", async () => {
     if (currentWorkout.length === 0) return;
     const exerciseCount = currentWorkout.length;
+
+    // Check for PRs across all exercises in current workout session
+    const prList = [];
+    for (const ex of currentWorkout) {
+      const stats = await getExerciseHistoricalStats(ex.exercise);
+      if (!ex.est1RM) ex.est1RM = calculate1RM(ex.weight, ex.reps);
+
+      let isWeightPR = false;
+      let is1RM_PR = false;
+
+      if (stats.hasHistory) {
+        isWeightPR = ex.weight > stats.maxWeight;
+        is1RM_PR = ex.est1RM > stats.max1RM;
+      }
+
+      if (isWeightPR || is1RM_PR) {
+        ex.isPR = true;
+        ex.isWeightPR = isWeightPR;
+        ex.is1RM_PR = is1RM_PR;
+        prList.push(ex);
+      }
+    }
+
     await db.workouts.add({
       date: new Date().toISOString(),
       exercises: currentWorkout,
     });
+
     currentWorkout = [];
     await renderCurrentWorkout();
     await renderExerciseOptions();
-    showSuccessToast(`Workout saved! ${exerciseCount} ${exerciseCount === 1 ? 'exercise' : 'exercises'} logged 💪`);
+
+    if (prList.length > 0) {
+      showPRToast(prList);
+    } else {
+      showSuccessToast(`Workout saved! ${exerciseCount} ${exerciseCount === 1 ? 'exercise' : 'exercises'} logged 💪`);
+    }
+
     setTimeout(() => showHistoryView(), 400);
   });
 

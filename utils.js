@@ -298,3 +298,79 @@ export function showSuccessToast(message) {
   }, 2200);
 }
 
+// 1RM Calculation using Epley Formula: 1RM = Weight * (1 + Reps / 30)
+export function calculate1RM(weight, reps) {
+  const w = parseFloat(weight);
+  const r = parseInt(reps, 10);
+  if (isNaN(w) || w <= 0 || isNaN(r) || r <= 0) return 0;
+  if (r === 1) return Math.round(w * 10) / 10;
+  return Math.round(w * (1 + r / 30) * 10) / 10;
+}
+
+// Helper to fetch max weight and max 1RM recorded for an exercise
+export async function getExerciseHistoricalStats(exerciseName) {
+  let maxWeight = 0;
+  let max1RM = 0;
+  let hasHistory = false;
+
+  await db.workouts.orderBy("date").each((workout) => {
+    workout.exercises.forEach((ex) => {
+      if (ex.exercise === exerciseName) {
+        hasHistory = true;
+        const w = parseFloat(ex.weight) || 0;
+        const r = parseInt(ex.reps, 10) || 0;
+        const est1RM = ex.est1RM || calculate1RM(w, r);
+        if (w > maxWeight) maxWeight = w;
+        if (est1RM > max1RM) max1RM = est1RM;
+      }
+    });
+  });
+
+  return { maxWeight, max1RM, hasHistory };
+}
+
+// PR Celebratory Toast
+export function showPRToast(prList) {
+  if (!prList || prList.length === 0) return;
+
+  if ("vibrate" in navigator) {
+    try {
+      navigator.vibrate([200, 100, 200, 100, 400]);
+    } catch (e) {}
+  }
+
+  prList.forEach((pr, index) => {
+    setTimeout(() => {
+      const toast = document.createElement("div");
+      toast.className = "pr-toast";
+
+      let prTypeLabel = "";
+      if (pr.isWeightPR && pr.is1RM_PR) prTypeLabel = "NEW MAX WEIGHT & 1RM PR!";
+      else if (pr.isWeightPR) prTypeLabel = "NEW MAX WEIGHT PR!";
+      else prTypeLabel = "NEW ESTIMATED 1RM PR!";
+
+      toast.innerHTML = `
+        <div class="pr-toast-header">
+          <span class="pr-trophy">🏆</span>
+          <div class="pr-title-group">
+            <span class="pr-badge-title">${prTypeLabel}</span>
+            <strong class="pr-exercise-name">${pr.exercise}</strong>
+          </div>
+        </div>
+        <div class="pr-toast-body">
+          <span>${pr.weight} kg × ${pr.sets} × ${pr.reps}</span>
+          <span class="pr-1rm-tag">Est. 1RM: <strong>${pr.est1RM} kg</strong></span>
+        </div>
+      `;
+
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add("pr-toast-out");
+        toast.addEventListener("animationend", () => toast.remove());
+      }, 4500);
+    }, index * 400);
+  });
+}
+
+

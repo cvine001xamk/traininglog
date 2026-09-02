@@ -1,5 +1,5 @@
 // exercises.js
-import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache } from "./utils.js";
+import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache, calculate1RM } from "./utils.js";
 
 let exerciseList;
 let addNewExerciseForm;
@@ -294,18 +294,31 @@ const renderChart = async (exerciseName) => {
 
   // Stream workouts via cursor — avoids loading entire array into RAM
   const dailyMaxMap = new Map();
+  const daily1RMMap = new Map();
+
   await db.workouts.orderBy("date").each((w) => {
     const exerciseSets = w.exercises.filter((ex) => ex.exercise === exerciseName);
     if (exerciseSets.length === 0) return;
     const maxWeight = Math.max(...exerciseSets.map((ex) => parseFloat(ex.weight)));
+    const max1RM = Math.max(
+      ...exerciseSets.map((ex) => ex.est1RM || calculate1RM(ex.weight, ex.reps)),
+    );
+
     const dateKey = new Date(w.date).setHours(0, 0, 0, 0);
     if (!dailyMaxMap.has(dateKey) || dailyMaxMap.get(dateKey) < maxWeight) {
       dailyMaxMap.set(dateKey, maxWeight);
+    }
+    if (!daily1RMMap.has(dateKey) || daily1RMMap.get(dateKey) < max1RM) {
+      daily1RMMap.set(dateKey, max1RM);
     }
   });
 
   let exerciseHistory = Array.from(dailyMaxMap.entries())
     .map(([time, weight]) => ({ x: time, y: weight }))
+    .sort((a, b) => a.x - b.x);
+
+  let est1RMHistory = Array.from(daily1RMMap.entries())
+    .map(([time, rm]) => ({ x: time, y: rm }))
     .sort((a, b) => a.x - b.x);
 
   // Apply time range filter
@@ -319,6 +332,7 @@ const renderChart = async (exerciseName) => {
     
     const cutoffTime = cutoff.getTime();
     exerciseHistory = exerciseHistory.filter(d => d.x >= cutoffTime);
+    est1RMHistory = est1RMHistory.filter(d => d.x >= cutoffTime);
   }
 
   // Update change stats summary badge
@@ -443,7 +457,12 @@ const renderChart = async (exerciseName) => {
     },
     plugins: {
       legend: {
-        display: false, // Save vertical space; the chart title already names the exercise.
+        display: true,
+        labels: {
+          color: "#99aab5",
+          font: { size: 11 },
+          boxWidth: 12,
+        },
       },
       annotation: {
         annotations: goalWeight
@@ -508,6 +527,23 @@ const renderChart = async (exerciseName) => {
           pointHoverBorderWidth: 2,
           pointHoverBorderColor: "#3399ff",
           borderWidth: 2.5,
+        },
+        {
+          label: "Est. 1RM (kg)",
+          data: est1RMHistory,
+          borderColor: "#ffd700",
+          borderDash: [4, 4],
+          backgroundColor: "rgba(255, 215, 0, 0.05)",
+          tension: 0.3,
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 10,
+          pointBackgroundColor: "#ffd700",
+          pointHoverBackgroundColor: "#fff",
+          pointBorderWidth: 0,
+          pointHoverBorderWidth: 2,
+          pointHoverBorderColor: "#ffd700",
+          borderWidth: 2,
         },
       ],
     },

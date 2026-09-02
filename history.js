@@ -1,5 +1,5 @@
 // history.js
-import { db, formatDate, showConfirm, parseCSVLine } from "./utils.js";
+import { db, formatDate, showConfirm, parseCSVLine, calculate1RM } from "./utils.js";
 
 let historyList;
 let importBtn;
@@ -137,8 +137,16 @@ const createWorkoutArticle = (workout) => {
     exerciseName.textContent = ex.exercise;
     exDiv.appendChild(exerciseName);
 
+    if (ex.isPR || ex.isWeightPR || ex.is1RM_PR) {
+      const prBadge = document.createElement("span");
+      prBadge.className = "pr-badge";
+      prBadge.innerHTML = `🏆 PR`;
+      exDiv.appendChild(prBadge);
+    }
+
+    const est1RM = ex.est1RM || calculate1RM(ex.weight, ex.reps);
     const details = document.createElement("span");
-    details.textContent = `${ex.weight}kg × ${ex.sets} × ${ex.reps}`;
+    details.innerHTML = `${ex.weight}kg × ${ex.sets} × ${ex.reps} <span class="est-1rm-info">(1RM: ${est1RM}kg)</span>`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);
   });

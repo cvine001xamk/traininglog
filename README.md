@@ -13,14 +13,15 @@ A lightweight, privacy-focused Progressive Web Application (PWA) designed for st
 - **Built-in Rest Timer**: Quick 1-minute increment rest timer positioned at the top of the logging view with real-time countdown display.
 
 ### 📊 2. Progress Analytics & Goal Setting
-- **Interactive Progress Charts**: View strength trends over time per exercise powered by `Chart.js` (lazy-loaded for fast initial load).
+- **Interactive Progress Charts**: View strength trends and Estimated 1RM over time per exercise powered by `Chart.js` (lazy-loaded for fast initial load).
+- **Estimated 1RM & PR Celebrations**: Automatic 1-Rep Max calculation using the Epley formula ($1RM = Weight \times (1 + Reps / 30)$) with celebratory gold toast notifications (🏆) and vibration alerts whenever a Personal Record is broken.
 - **Time-Range Filters**: Filter progress history across preset timeframes (`1M`, `3M`, `6M`, `1Y`, `ALL`).
 - **Goal Weight Tracking**: Set target goals per exercise with a goal visualization line rendered on progress charts.
 - **Performance Summary Badges**: Dynamic calculation of weight change ($\Delta$ kg and %), total sessions completed, and weekly average frequency over the selected timeframe.
 - **Chart Controls**: Pinch-to-zoom support, pan, and one-click zoom reset.
 
 ### 📜 3. Workout History & Data Management
-- **Chronological History View**: Paginated view of past workouts with detailed breakdowns of exercises, weights, sets, and reps.
+- **Chronological History View**: Paginated view of past workouts with detailed breakdowns of exercises, weights, sets, reps, Estimated 1RM, and 🏆 **PR Badges**.
 - **In-Place History Editing**: Modify previous workout sets, reps, or weights directly from the history view.
 - **Data Import / Export**:
   - Export training logs to standard `.csv` files.
@@ -80,7 +81,7 @@ Here are planned features and improvements to be implemented in future iteration
 - [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set.
 - [ ] **Warm-up Set Calculator**: Automatically suggest warm-up sets and plate loadings leading up to the working weight.
 - [ ] **Workout Templates & Routines**: Support creating, saving, and launching pre-configured routine templates (e.g. 5/3/1, Push/Pull/Legs).
-- [ ] **Calculated 1RM & PR Badges**: Automatically compute estimated 1-Rep Max (Epley & Brzycki formulas) and trigger personal record (PR) celebration notifications.
+- [x] **Calculated 1RM & PR Badges**: Automatically compute estimated 1-Rep Max (Epley formula) and trigger personal record (PR) celebration notifications.
 - [ ] **Total Workout Volume Tracking**: Display total tonnage/volume ($Weight \times Sets \times Reps$) in workout history and summary analytics.
 - [ ] **Cloud Sync / Backup**: Optional cloud synchronization (e.g., Google Drive or custom backend integration) alongside IndexedDB storage.
 - [ ] **Rest Timer Customization**: Configurable audio chimes, vibration alerts, and native PWA background notifications when the rest timer finishes.
