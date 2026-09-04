@@ -77,16 +77,18 @@ Since **Training Log** is built with standard web technologies and ES modules, y
 
 ## 🔮 Future Roadmap (TODO Tasks)
 
-Here are planned features and improvements to be implemented in future iterations:
+Here are planned features and improvements for future iterations:
 
-- [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set.
-- [ ] **Warm-up Set Calculator**: Automatically suggest warm-up sets and plate loadings leading up to the working weight.
-- [ ] **Workout Templates & Routines**: Support creating, saving, and launching pre-configured routine templates (e.g. 5/3/1, Push/Pull/Legs).
-- [x] **Calculated 1RM & PR Badges**: Automatically compute estimated 1-Rep Max (Epley formula) and trigger personal record (PR) celebration notifications.
-- [x] **Native PWA Background Notifications**: Background Service Worker notifications when the rest timer finishes.
-- [x] **Total Workout Volume Tracking**: Display total tonnage/volume ($Weight \times Sets \times Reps$) in workout history and summary analytics.
-- [ ] **Cloud Sync / Backup**: Optional cloud synchronization (e.g., Google Drive or custom backend integration) alongside IndexedDB storage.
-- [ ] **Dark / Light Theme Toggle**: User setting to switch between dark and light UI themes.
+- [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set for advanced autoregulation.
+- [ ] **Warm-up Set Calculator**: Automatically calculate progressive warm-up sets and barbell plate loadings leading up to working sets.
+- [ ] **Workout Templates & Routines**: Create, save, and quickly start pre-configured workout routines (e.g., Push/Pull/Legs, Upper/Lower, 5/3/1).
+- [ ] **Superset & Circuit Support**: Link exercises together in the session staging area to track supersets and circuit rest intervals.
+- [ ] **Specialty Bars & Collars**: Support custom barbell types (Safety Squat Bar, Trap Bar, Swiss Bar, EZ-Curl) and collar weights in the plate visualizer.
+- [ ] **Exercise Notes & Form Cues**: Attach persistent form cues, technique notes, and workout session reflections.
+- [ ] **Calendar & Consistency Heatmap**: Visual training calendar with weekly streaks and monthly workout frequency heatmaps.
+- [ ] **Lossless JSON Backup & Restore**: Full offline database export and restore in JSON format alongside CSV support.
+- [ ] **Custom Audio Rest Timer Alerts**: Optional audio chimes/bell sound cues when the rest timer finishes.
+- [ ] **Relative Strength Metrics (Wilks / DOTS)**: Optional bodyweight tracking to calculate strength-to-weight ratios over time.
 
 ---
 
