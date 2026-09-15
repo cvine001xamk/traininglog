@@ -338,19 +338,12 @@ const importFromCSV = () => {
           };
         }
 
-        // Retrieve or assign barWeight
-        let barWeight = exerciseBarWeights.get(exerciseName);
-        if (barWeight === undefined) {
-          barWeight = 20; // Default to 20kg barbell
-          exerciseBarWeights.set(exerciseName, barWeight);
-        }
-
         const parsedWeight = parseFloat(weight.trim());
         const parsedSets = parseInt(sets.trim(), 10);
         const parsedReps = parseInt(reps.trim(), 10);
         if (
           isNaN(parsedWeight) ||
-          parsedWeight <= 0 ||
+          parsedWeight < 0 ||
           isNaN(parsedSets) ||
           parsedSets <= 0 ||
           isNaN(parsedReps) ||
@@ -360,16 +353,31 @@ const importFromCSV = () => {
           continue;
         }
 
+        // Retrieve or assign barWeight
+        let barWeight = exerciseBarWeights.get(exerciseName);
+        if (barWeight === undefined) {
+          barWeight = parsedWeight === 0 ? 0 : 20;
+          exerciseBarWeights.set(exerciseName, barWeight);
+        }
+
+        const est1RM = parsedWeight > 0 ? calculate1RM(parsedWeight, parsedReps) : 0;
+
         newWorkouts[dateKey].exercises.push({
           exercise: exerciseName,
           weight: parsedWeight,
           sets: parsedSets,
           reps: parsedReps,
           barWeight: barWeight,
+          est1RM: est1RM,
         });
 
         if (!allExerciseNames.has(exerciseName)) {
-          exercisesToAdd.push({ name: exerciseName, barWeight: 20 });
+          const category = parsedWeight === 0 ? "bodyweight" : "barbell";
+          exercisesToAdd.push({
+            name: exerciseName,
+            barWeight: barWeight,
+            category: category,
+          });
           allExerciseNames.add(exerciseName);
         }
       }
