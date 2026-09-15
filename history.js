@@ -133,22 +133,27 @@ const createWorkoutArticle = (workout) => {
   workout.exercises.forEach((ex) => {
     const exDiv = document.createElement("div");
 
+    const titleWrapper = document.createElement("span");
+    titleWrapper.className = "exercise-title-wrapper";
+
     const exerciseName = document.createElement("span");
     exerciseName.style.fontWeight = "bold";
     exerciseName.textContent = ex.exercise;
-    exDiv.appendChild(exerciseName);
+    titleWrapper.appendChild(exerciseName);
 
     if (ex.isPR || ex.isWeightPR || ex.is1RM_PR) {
       const prBadge = document.createElement("span");
       prBadge.className = "pr-badge";
-      prBadge.innerHTML = `🏆 PR`;
-      exDiv.appendChild(prBadge);
+      prBadge.textContent = "PR";
+      titleWrapper.appendChild(prBadge);
     }
+    exDiv.appendChild(titleWrapper);
 
     const est1RM = ex.est1RM || calculate1RM(ex.weight, ex.reps);
     const exVolume = calculateVolume(ex.weight, ex.sets, ex.reps);
     totalWorkoutVolume += exVolume;
     const details = document.createElement("span");
+    details.className = "exercise-details";
     details.innerHTML = `${ex.weight}kg × ${ex.sets} × ${ex.reps} <span class="est-1rm-info">(1RM: ${est1RM}kg)</span> <span class="volume-info">${exVolume}kg vol</span>`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);

@@ -397,17 +397,35 @@ article header {
   margin-top: 1rem;
 }
 
-#history-list .exercises-container div {
+#history-list .exercises-container > div {
   margin-bottom: 0.25rem;
   font-size: 0.9rem;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding-bottom: 0.25rem;
 }
 
-#history-list .exercises-container div:last-child {
+#history-list .exercises-container > div:last-child {
   border-bottom: none;
+}
+
+.exercise-title-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.exercise-details {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  text-align: right;
 }
 
 /* Details and Accordions */
@@ -1138,17 +1156,20 @@ dialog::backdrop {
 .pr-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
+  justify-content: center;
   background: linear-gradient(135deg, #ffd700, #ffaa00);
   color: #000;
   font-weight: 800;
-  font-size: 0.7rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(255, 215, 0, 0.4);
-  letter-spacing: 0.03em;
-  margin-left: 0.4rem;
+  font-size: 0.62rem;
+  line-height: 1;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(255, 215, 0, 0.3);
+  letter-spacing: 0.04em;
+  margin-left: 0.35rem;
   vertical-align: middle;
+  flex-shrink: 0;
+  text-transform: uppercase;
 }
 
 .est-1rm-info {
