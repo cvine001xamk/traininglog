@@ -29,7 +29,7 @@ A lightweight, privacy-focused Progressive Web Application (PWA) designed for st
 
 ### ⚙️ 4. Inventory & Customization
 - **Plate Inventory Management**: Add, modify, or remove custom barbell plates with specified weights, pair quantities, and custom colors.
-- **Custom Exercises**: Register custom exercises and configure default bar weights (e.g., 2kg, 8kg, 10kg, 20kg barbell options).
+- **Custom Exercises & Categorization**: Register custom exercises across categories (Barbell / Main Lifts, Auxiliary / Landmine / Cable, and Bodyweight / Core). Auxiliary and bodyweight movements adapt dynamically with contextual placeholders, 0kg bodyweight logging, and automatic plate visualizer suppression.
 
 ### 📱 5. PWA & Mobile UX
 - **Offline Support**: Service Worker (`sw.js`) enables full functionality without an active internet connection.
@@ -79,6 +79,7 @@ Since **Training Log** is built with standard web technologies and ES modules, y
 
 Here are planned features and improvements for future iterations:
 
+- [x] **Auxiliary & Bodyweight Exercise Support**: Log landmine workouts, ab crunches, and core/bodyweight exercises cleanly with categorized `<optgroup>` dropdowns, adaptive weight inputs (supporting 0 kg bodyweight), and automated plate visualizer suppression.
 - [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set for advanced autoregulation.
 - [ ] **Warm-up Set Calculator**: Automatically calculate progressive warm-up sets and barbell plate loadings leading up to working sets.
 - [ ] **Workout Templates & Routines**: Create, save, and quickly start pre-configured workout routines (e.g., Push/Pull/Legs, Upper/Lower, 5/3/1).

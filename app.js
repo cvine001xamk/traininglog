@@ -114,15 +114,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const exVolume = calculateVolume(exercise.weight, exercise.sets, exercise.reps);
 
+      const weightDisplay = exercise.weight === 0 ? "Bodyweight" : `${exercise.weight} kg`;
+      const volDisplay = exVolume > 0 ? ` <span class="volume-info">${exVolume}kg vol</span>` : "";
+
       if (plates) {
         let platesText = `${plates.weightPerSide} kg/side + ${plates.barWeight} kg bar`;
         if (plates.plates && plates.plates.length > 0) {
           const plateWeights = plates.plates.map((p) => p.weight || p);
           platesText += ` [${plateWeights.join(", ")}]`;
         }
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps} <span class="volume-info">${exVolume}kg vol</span></p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${weightDisplay} (${platesText}) &times; ${exercise.sets} &times; ${exercise.reps}${volDisplay}</p>`;
       } else {
-        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${exercise.weight} kg &times; ${exercise.sets} &times; ${exercise.reps} <span class="volume-info">${exVolume}kg vol</span></p>`;
+        contentDiv.innerHTML = `<p style="margin:0 0 4px 0;"><strong>${exercise.exercise}</strong></p><p style="margin:0; font-size:0.9em; color:var(--secondary-color);">${weightDisplay} &times; ${exercise.sets} &times; ${exercise.reps}${volDisplay}</p>`;
       }
 
       const editBtn = document.createElement("button");
@@ -165,6 +168,39 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const updateExerciseFormMode = async (exerciseName) => {
+    const weightLabel = document.getElementById("weight-label");
+    if (!exerciseName) {
+      if (weightLabel) weightLabel.textContent = "Weight (kg)";
+      weightInput.placeholder = "e.g., 100";
+      return;
+    }
+    const exerciseData = await db.exercises.get({ name: exerciseName });
+    const category = exerciseData?.category || "barbell";
+
+    if (category === "bodyweight") {
+      if (weightLabel) weightLabel.textContent = "Added Weight (kg)";
+      weightInput.placeholder = "0 (Bodyweight) or +kg";
+      if (!weightInput.value || weightInput.value === "0") {
+        weightInput.value = "0";
+      }
+      plateVisualizer.style.display = "none";
+    } else if (category === "auxiliary") {
+      if (weightLabel) weightLabel.textContent = "Weight / Added (kg)";
+      weightInput.placeholder = "e.g., 25";
+      if (weightInput.value === "0") {
+        weightInput.value = "";
+      }
+      plateVisualizer.style.display = "none";
+    } else {
+      if (weightLabel) weightLabel.textContent = "Weight (kg)";
+      weightInput.placeholder = "e.g., 100";
+      if (weightInput.value === "0") {
+        weightInput.value = "";
+      }
+    }
+  };
+
   const renderExerciseOptions = async () => {
     const allExercises = await db.exercises.toArray();
     const currentWorkoutExerciseNames = currentWorkout.map((ex) => ex.exercise);
@@ -173,12 +209,49 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     exerciseSelect.innerHTML = "";
-    availableExercises.forEach((ex) => {
-      const option = document.createElement("option");
-      option.value = ex.name;
-      option.textContent = ex.name;
-      exerciseSelect.appendChild(option);
-    });
+
+    const barbellExercises = availableExercises.filter(
+      (ex) => !ex.category || ex.category === "barbell",
+    );
+    const auxiliaryExercises = availableExercises.filter(
+      (ex) => ex.category === "auxiliary",
+    );
+    const bodyweightExercises = availableExercises.filter(
+      (ex) => ex.category === "bodyweight",
+    );
+
+    const hasMultipleGroups =
+      [barbellExercises, auxiliaryExercises, bodyweightExercises].filter(
+        (g) => g.length > 0,
+      ).length > 1;
+
+    const appendGroup = (label, list) => {
+      if (list.length === 0) return;
+      if (hasMultipleGroups) {
+        const optgroup = document.createElement("optgroup");
+        optgroup.label = label;
+        list.forEach((ex) => {
+          const opt = document.createElement("option");
+          opt.value = ex.name;
+          opt.textContent = ex.name;
+          optgroup.appendChild(opt);
+        });
+        exerciseSelect.appendChild(optgroup);
+      } else {
+        list.forEach((ex) => {
+          const opt = document.createElement("option");
+          opt.value = ex.name;
+          opt.textContent = ex.name;
+          exerciseSelect.appendChild(opt);
+        });
+      }
+    };
+
+    appendGroup("Primary Lifts", barbellExercises);
+    appendGroup("Auxiliary & Landmine", auxiliaryExercises);
+    appendGroup("Bodyweight & Core", bodyweightExercises);
+
+    await updateExerciseFormMode(exerciseSelect.value);
     await updateLastWeightInfo(exerciseSelect.value);
   };
 
@@ -214,15 +287,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (lastWeight !== null) {
       const exerciseData = await db.exercises.get({ name: exerciseName });
+      const category = exerciseData?.category || "barbell";
       const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
-      const plates = await calculatePlates(lastWeight, barWeight);
+      const plates = category === "barbell" ? await calculatePlates(lastWeight, barWeight) : null;
       const est1RM = calculate1RM(lastWeight, lastReps || 1);
 
-      let infoText = `Last: ${lastWeight}kg`;
+      let infoText = lastWeight === 0 ? "Last: Bodyweight" : `Last: ${lastWeight}kg`;
       if (plates) {
         infoText += ` (${plates.weightPerSide}kg/side)`;
       }
-      infoText += ` | Max: ${maxWeight}kg | Est. 1RM: ${max1RM > 0 ? max1RM : est1RM}kg`;
+      if (maxWeight > 0) {
+        infoText += ` | Max: ${maxWeight}kg`;
+      }
+      const peak1RM = max1RM > 0 ? max1RM : est1RM;
+      if (peak1RM > 0 && category === "barbell") {
+        infoText += ` | Est. 1RM: ${peak1RM}kg`;
+      }
       lastWeightInfo.textContent = infoText;
     } else {
       lastWeightInfo.textContent = "";
@@ -468,6 +548,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const exerciseData = await db.exercises.get({ name: exerciseName });
+    const category = exerciseData?.category || "barbell";
+    if (category !== "barbell") {
+      plateVisualizer.style.display = "none";
+      return;
+    }
+
     const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
 
     const plates = await calculatePlates(weightVal, barWeight);
@@ -519,9 +605,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   weightInput.addEventListener("input", updatePlateVisualizer);
 
-  // Merged into one listener — both run in parallel on exercise change
   exerciseSelect.addEventListener("change", (e) => {
     Promise.all([
+      updateExerciseFormMode(e.target.value),
       updatePlateVisualizer(),
       updateLastWeightInfo(e.target.value),
     ]);
@@ -530,28 +616,29 @@ document.addEventListener("DOMContentLoaded", () => {
   addExerciseForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const exerciseName = document.getElementById("exercise").value;
-    const weight = parseFloat(document.getElementById("weight").value);
+    const weightRaw = document.getElementById("weight").value;
+    const weight = parseFloat(weightRaw);
     const sets = parseInt(document.getElementById("sets").value, 10);
     const reps = parseInt(document.getElementById("reps").value, 10);
 
     if (
       !exerciseName ||
       isNaN(weight) ||
-      weight <= 0 ||
+      weight < 0 ||
       isNaN(sets) ||
       sets <= 0 ||
       isNaN(reps) ||
       reps <= 0
     ) {
       await showAlert(
-        "Please enter valid positive values for exercise, weight, sets and reps.",
+        "Please enter valid positive values for sets and reps, and non-negative weight.",
       );
       return;
     }
 
     const exerciseData = await db.exercises.get({ name: exerciseName });
-    const barWeight = exerciseData ? exerciseData.barWeight || 10 : 10;
-    const est1RM = calculate1RM(weight, reps);
+    const barWeight = exerciseData ? exerciseData.barWeight || 0 : 0;
+    const est1RM = weight > 0 ? calculate1RM(weight, reps) : 0;
 
     currentWorkout.push({
       exercise: exerciseName,
@@ -564,6 +651,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await renderCurrentWorkout();
     await renderExerciseOptions();
     addExerciseForm.reset();
+    await updateExerciseFormMode(exerciseSelect.value);
     plateVisualizer.style.display = "none";
     document.getElementById("exercise").focus();
   });

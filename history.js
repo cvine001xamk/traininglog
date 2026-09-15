@@ -149,12 +149,15 @@ const createWorkoutArticle = (workout) => {
     }
     exDiv.appendChild(titleWrapper);
 
-    const est1RM = ex.est1RM || calculate1RM(ex.weight, ex.reps);
+    const est1RM = ex.weight > 0 ? (ex.est1RM || calculate1RM(ex.weight, ex.reps)) : 0;
     const exVolume = calculateVolume(ex.weight, ex.sets, ex.reps);
     totalWorkoutVolume += exVolume;
     const details = document.createElement("span");
     details.className = "exercise-details";
-    details.innerHTML = `${ex.weight}kg × ${ex.sets} × ${ex.reps} <span class="est-1rm-info">(1RM: ${est1RM}kg)</span> <span class="volume-info">${exVolume}kg vol</span>`;
+    const weightLabel = ex.weight === 0 ? "Bodyweight" : `${ex.weight}kg`;
+    const est1RMLabel = est1RM > 0 ? ` <span class="est-1rm-info">(1RM: ${est1RM}kg)</span>` : "";
+    const volLabel = exVolume > 0 ? ` <span class="volume-info">${exVolume}kg vol</span>` : "";
+    details.innerHTML = `${weightLabel} × ${ex.sets} × ${ex.reps}${est1RMLabel}${volLabel}`;
     exDiv.appendChild(details);
     exercisesContainer.appendChild(exDiv);
   });

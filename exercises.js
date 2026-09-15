@@ -71,14 +71,36 @@ export function initExercises() {
       }
     });
 
+    const categorySelect = document.getElementById("new-exercise-category");
+    const barWeightGroup = document.getElementById("new-exercise-bar-weight-group");
+    const barWeightSelect = document.getElementById("new-exercise-bar-weight");
+    if (categorySelect && barWeightGroup) {
+      categorySelect.addEventListener("change", (e) => {
+        if (e.target.value === "barbell") {
+          barWeightGroup.style.display = "block";
+          if (barWeightSelect.value === "0") barWeightSelect.value = "20";
+        } else {
+          barWeightGroup.style.display = "none";
+          barWeightSelect.value = "0";
+        }
+      });
+    }
+
     addNewExerciseForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const newExerciseName = newExerciseNameInput.value.trim();
-      const barWeight = parseInt(
+      const category = document.getElementById("new-exercise-category")?.value || "barbell";
+      let barWeight = parseInt(
         document.getElementById("new-exercise-bar-weight").value,
       );
+      if (isNaN(barWeight) || category !== "barbell") barWeight = 0;
+
       if (newExerciseName) {
-        await db.exercises.add({ name: newExerciseName, barWeight: barWeight });
+        await db.exercises.add({
+          name: newExerciseName,
+          barWeight: barWeight,
+          category: category,
+        });
         await renderExerciseManagementList();
         newExerciseNameInput.value = "";
         await showAlert("Exercise added! Go to 'Log Workout' to see it in the list.");
@@ -106,6 +128,14 @@ export function initExercises() {
         const id = parseInt(e.target.dataset.id);
         const barWeight = parseInt(e.target.value);
         await db.exercises.update(id, { barWeight: barWeight });
+      }
+      if (e.target.classList.contains("category-select")) {
+        const id = parseInt(e.target.dataset.id);
+        const category = e.target.value;
+        const updates = { category: category };
+        if (category !== "barbell") updates.barWeight = 0;
+        await db.exercises.update(id, updates);
+        await renderExerciseManagementList();
       }
     });
 
@@ -221,8 +251,35 @@ const renderExerciseManagementList = async () => {
     nameEl.style.textOverflow = "ellipsis";
     infoDiv.appendChild(nameEl);
 
+    const category = ex.category || "barbell";
+
+    const catDiv = document.createElement("div");
+    catDiv.className = "category-selection";
+    catDiv.style.marginRight = "0.5rem";
+
+    const catSelect = document.createElement("select");
+    catSelect.className = "category-select";
+    catSelect.dataset.id = ex.id;
+    catSelect.setAttribute("aria-label", "Exercise category");
+    [
+      { value: "barbell", label: "Barbell" },
+      { value: "auxiliary", label: "Auxiliary" },
+      { value: "bodyweight", label: "Bodyweight" },
+    ].forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat.value;
+      opt.textContent = cat.label;
+      if (category === cat.value) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    catDiv.appendChild(catSelect);
+    infoDiv.appendChild(catDiv);
+
     const barDiv = document.createElement("div");
     barDiv.className = "bar-selection";
+    if (category !== "barbell") {
+      barDiv.style.display = "none";
+    }
 
     const barLabel = document.createElement("label");
     barLabel.textContent = "Bar: ";
@@ -231,7 +288,8 @@ const renderExerciseManagementList = async () => {
     const barSelect = document.createElement("select");
     barSelect.className = "bar-weight-select";
     barSelect.dataset.id = ex.id;
-    [2, 8, 10, 20].forEach((w) => {
+    barSelect.setAttribute("aria-label", "Bar weight");
+    [0, 2, 8, 10, 20].forEach((w) => {
       const opt = document.createElement("option");
       opt.value = w;
       opt.textContent = `${w} kg`;

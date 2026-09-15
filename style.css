@@ -501,7 +501,8 @@ article header {
   min-height: 36px;
 }
 
-.bar-selection {
+.bar-selection,
+.category-selection {
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -509,12 +510,30 @@ article header {
   color: var(--secondary-color);
 }
 
-.bar-selection select {
+.bar-selection select,
+.category-selection select {
   width: auto;
-  padding: 0.1rem 0.2rem;
+  padding: 0.1rem 0.3rem;
   font-size: 0.8rem;
   background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
   height: 1.5rem;
+  color: var(--text-color);
+}
+
+optgroup {
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: var(--surface-color);
+  padding: 0.25rem 0;
+}
+
+optgroup option {
+  font-weight: normal;
+  color: var(--text-color);
+  background-color: var(--surface-color);
+  padding-left: 0.75rem;
 }
 
 /* Utility */
