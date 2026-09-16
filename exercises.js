@@ -108,8 +108,9 @@ export function initExercises() {
     });
 
     exerciseList.addEventListener("click", async (e) => {
-      if (e.target.classList.contains("view-history-btn")) {
-        const exerciseName = e.target.dataset.name;
+      const viewBtn = e.target.closest(".view-history-btn");
+      if (viewBtn) {
+        const exerciseName = viewBtn.dataset.name;
         await renderChart(exerciseName);
       }
       const deleteBtn = e.target.closest(".delete-exercise-btn");
@@ -230,75 +231,21 @@ const renderExerciseManagementList = async () => {
   exerciseList.innerHTML = "";
   exercises.forEach((ex) => {
     const item = document.createElement("article");
-    item.classList.add("exercise-list-item");
+    item.classList.add("exercise-list-item", "exercise-manage-item");
     const barWeight = ex.barWeight || 10;
-
-    const wrapper = document.createElement("div");
-
-    const infoDiv = document.createElement("div");
-    infoDiv.className = "exercise-info";
-    infoDiv.style.flexDirection = "row";
-    infoDiv.style.alignItems = "center";
-    infoDiv.style.flex = "1";
-    infoDiv.style.paddingRight = "0.5rem";
-    infoDiv.style.minWidth = "0"; // Ensures child text truncation works
-
-    const nameEl = document.createElement("strong");
-    nameEl.textContent = ex.name; // Safe — no innerHTML
-    nameEl.style.flex = "1";
-    nameEl.style.whiteSpace = "nowrap";
-    nameEl.style.overflow = "hidden";
-    nameEl.style.textOverflow = "ellipsis";
-    infoDiv.appendChild(nameEl);
-
     const category = ex.category || "barbell";
 
-    const catDiv = document.createElement("div");
-    catDiv.className = "category-selection";
-    catDiv.style.marginRight = "0.5rem";
+    const card = document.createElement("div");
+    card.className = "exercise-manage-card";
 
-    const catSelect = document.createElement("select");
-    catSelect.className = "category-select";
-    catSelect.dataset.id = ex.id;
-    catSelect.setAttribute("aria-label", "Exercise category");
-    [
-      { value: "barbell", label: "Barbell" },
-      { value: "auxiliary", label: "Auxiliary" },
-      { value: "bodyweight", label: "Bodyweight" },
-    ].forEach((cat) => {
-      const opt = document.createElement("option");
-      opt.value = cat.value;
-      opt.textContent = cat.label;
-      if (category === cat.value) opt.selected = true;
-      catSelect.appendChild(opt);
-    });
-    catDiv.appendChild(catSelect);
-    infoDiv.appendChild(catDiv);
+    // Header row: Exercise name and action buttons
+    const headerRow = document.createElement("div");
+    headerRow.className = "exercise-manage-header";
 
-    const barDiv = document.createElement("div");
-    barDiv.className = "bar-selection";
-    if (category !== "barbell") {
-      barDiv.style.display = "none";
-    }
-
-    const barLabel = document.createElement("label");
-    barLabel.textContent = "Bar: ";
-    barDiv.appendChild(barLabel);
-
-    const barSelect = document.createElement("select");
-    barSelect.className = "bar-weight-select";
-    barSelect.dataset.id = ex.id;
-    barSelect.setAttribute("aria-label", "Bar weight");
-    [0, 2, 8, 10, 20].forEach((w) => {
-      const opt = document.createElement("option");
-      opt.value = w;
-      opt.textContent = `${w} kg`;
-      if (barWeight === w) opt.selected = true;
-      barSelect.appendChild(opt);
-    });
-    barDiv.appendChild(barSelect);
-    infoDiv.appendChild(barDiv);
-    wrapper.appendChild(infoDiv);
+    const nameEl = document.createElement("strong");
+    nameEl.className = "exercise-manage-name";
+    nameEl.textContent = ex.name;
+    headerRow.appendChild(nameEl);
 
     const buttonGroup = document.createElement("div");
     buttonGroup.className = "button-group";
@@ -316,8 +263,66 @@ const renderExerciseManagementList = async () => {
     deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
     buttonGroup.appendChild(deleteBtn);
 
-    wrapper.appendChild(buttonGroup);
-    item.appendChild(wrapper);
+    headerRow.appendChild(buttonGroup);
+    card.appendChild(headerRow);
+
+    // Controls row: Category and Bar weight selections
+    const controlsRow = document.createElement("div");
+    controlsRow.className = "exercise-manage-controls";
+
+    const catDiv = document.createElement("div");
+    catDiv.className = "category-selection";
+
+    const catLabel = document.createElement("label");
+    catLabel.textContent = "Type: ";
+    catLabel.className = "control-label";
+    catDiv.appendChild(catLabel);
+
+    const catSelect = document.createElement("select");
+    catSelect.className = "category-select";
+    catSelect.dataset.id = ex.id;
+    catSelect.setAttribute("aria-label", "Exercise category");
+    [
+      { value: "barbell", label: "Barbell" },
+      { value: "auxiliary", label: "Auxiliary" },
+      { value: "bodyweight", label: "Bodyweight" },
+    ].forEach((cat) => {
+      const opt = document.createElement("option");
+      opt.value = cat.value;
+      opt.textContent = cat.label;
+      if (category === cat.value) opt.selected = true;
+      catSelect.appendChild(opt);
+    });
+    catDiv.appendChild(catSelect);
+    controlsRow.appendChild(catDiv);
+
+    const barDiv = document.createElement("div");
+    barDiv.className = "bar-selection";
+    if (category !== "barbell") {
+      barDiv.style.display = "none";
+    }
+
+    const barLabel = document.createElement("label");
+    barLabel.textContent = "Bar: ";
+    barLabel.className = "control-label";
+    barDiv.appendChild(barLabel);
+
+    const barSelect = document.createElement("select");
+    barSelect.className = "bar-weight-select";
+    barSelect.dataset.id = ex.id;
+    barSelect.setAttribute("aria-label", "Bar weight");
+    [0, 2, 8, 10, 20].forEach((w) => {
+      const opt = document.createElement("option");
+      opt.value = w;
+      opt.textContent = `${w} kg`;
+      if (barWeight === w) opt.selected = true;
+      barSelect.appendChild(opt);
+    });
+    barDiv.appendChild(barSelect);
+    controlsRow.appendChild(barDiv);
+
+    card.appendChild(controlsRow);
+    item.appendChild(card);
     exerciseList.appendChild(item);
   });
 };
