@@ -19,6 +19,20 @@ let chartGoalToggle;
 let chartGoalRow;
 let rangeButtons;
 let currentTimeRange = "ALL";
+const expandedExerciseIds = new Set();
+
+function getCategoryBadgeLabel(category, barWeight) {
+  if (category === "barbell") {
+    return `Barbell • ${barWeight ?? 20} kg`;
+  }
+  if (category === "auxiliary") {
+    return "Auxiliary";
+  }
+  if (category === "bodyweight") {
+    return "Bodyweight";
+  }
+  return category || "Barbell";
+}
 
 export function initExercises() {
   exerciseList = document.getElementById("exercise-list");
@@ -112,14 +126,39 @@ export function initExercises() {
       if (viewBtn) {
         const exerciseName = viewBtn.dataset.name;
         await renderChart(exerciseName);
+        return;
       }
       const deleteBtn = e.target.closest(".delete-exercise-btn");
       if (deleteBtn) {
         const id = parseInt(deleteBtn.dataset.id);
         const confirmed = await showConfirm("Delete this exercise? This won't remove it from past workouts.");
         if (confirmed) {
+          expandedExerciseIds.delete(id);
           await db.exercises.delete(id);
           await renderExerciseManagementList();
+        }
+        return;
+      }
+
+      // Handle expanding / collapsing accordion drawer
+      const toggleBtn = e.target.closest(".toggle-details-btn");
+      const titleGroup = e.target.closest(".exercise-manage-title-group");
+      if (toggleBtn || titleGroup) {
+        const item = (toggleBtn || titleGroup).closest(".exercise-manage-item");
+        if (item) {
+          const id = parseInt(item.dataset.id);
+          const drawer = item.querySelector(".exercise-details-drawer");
+          const btn = item.querySelector(".toggle-details-btn");
+          const isExpanded = drawer?.classList.toggle("expanded");
+          if (btn) {
+            btn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+            btn.setAttribute("aria-label", isExpanded ? "Collapse settings" : "Expand settings");
+          }
+          if (isExpanded) {
+            expandedExerciseIds.add(id);
+          } else {
+            expandedExerciseIds.delete(id);
+          }
         }
       }
     });
@@ -129,6 +168,11 @@ export function initExercises() {
         const id = parseInt(e.target.dataset.id);
         const barWeight = parseInt(e.target.value);
         await db.exercises.update(id, { barWeight: barWeight });
+        const item = e.target.closest(".exercise-manage-item");
+        const badge = item?.querySelector(".exercise-badge");
+        if (badge) {
+          badge.textContent = `Barbell • ${barWeight} kg`;
+        }
       }
       if (e.target.classList.contains("category-select")) {
         const id = parseInt(e.target.dataset.id);
@@ -232,43 +276,77 @@ const renderExerciseManagementList = async () => {
   exercises.forEach((ex) => {
     const item = document.createElement("article");
     item.classList.add("exercise-list-item", "exercise-manage-item");
-    const barWeight = ex.barWeight || 10;
+    item.dataset.id = ex.id;
+    const barWeight = ex.barWeight !== undefined ? ex.barWeight : 10;
     const category = ex.category || "barbell";
+    const isExpanded = expandedExerciseIds.has(ex.id);
 
     const card = document.createElement("div");
     card.className = "exercise-manage-card";
 
-    // Header row: Exercise name and action buttons
+    // Header row: Exercise name & badge on left, History & Expand toggle on right
     const headerRow = document.createElement("div");
     headerRow.className = "exercise-manage-header";
+
+    const titleGroup = document.createElement("div");
+    titleGroup.className = "exercise-manage-title-group";
 
     const nameEl = document.createElement("strong");
     nameEl.className = "exercise-manage-name";
     nameEl.textContent = ex.name;
-    headerRow.appendChild(nameEl);
+    titleGroup.appendChild(nameEl);
 
-    const buttonGroup = document.createElement("div");
-    buttonGroup.className = "button-group";
+    const badge = document.createElement("span");
+    badge.className = `exercise-badge badge-${category}`;
+    badge.textContent = getCategoryBadgeLabel(category, barWeight);
+    titleGroup.appendChild(badge);
+
+    headerRow.appendChild(titleGroup);
+
+    const headerActions = document.createElement("div");
+    headerActions.className = "exercise-header-actions";
 
     const viewBtn = document.createElement("button");
     viewBtn.className = "btn view-history-btn";
     viewBtn.dataset.name = ex.name;
-    viewBtn.textContent = "View History";
-    buttonGroup.appendChild(viewBtn);
+    viewBtn.setAttribute("aria-label", `View stats for ${ex.name}`);
+    viewBtn.setAttribute("title", "View stats & history");
+    viewBtn.innerHTML = `
+      <svg class="stats-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      <span>Stats</span>`;
+    headerActions.appendChild(viewBtn);
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "icon-btn delete-btn delete-exercise-btn";
-    deleteBtn.dataset.id = ex.id;
-    deleteBtn.setAttribute("aria-label", "Delete exercise");
-    deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
-    buttonGroup.appendChild(deleteBtn);
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "icon-btn toggle-details-btn";
+    toggleBtn.setAttribute("type", "button");
+    toggleBtn.setAttribute("aria-label", isExpanded ? "Collapse settings" : "Expand settings");
+    toggleBtn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+    toggleBtn.innerHTML = `
+      <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>`;
+    headerActions.appendChild(toggleBtn);
 
-    headerRow.appendChild(buttonGroup);
+    headerRow.appendChild(headerActions);
     card.appendChild(headerRow);
 
-    // Controls row: Category and Bar weight selections
+    // Collapsible Drawer for settings
+    const drawer = document.createElement("div");
+    drawer.className = `exercise-details-drawer ${isExpanded ? "expanded" : ""}`;
+
+    const drawerContent = document.createElement("div");
+    drawerContent.className = "exercise-details-content";
+
+    // Controls row: Category and Bar weight selections + Delete button
     const controlsRow = document.createElement("div");
     controlsRow.className = "exercise-manage-controls";
+
+    const controlsLeft = document.createElement("div");
+    controlsLeft.className = "exercise-manage-controls-left";
 
     const catDiv = document.createElement("div");
     catDiv.className = "category-selection";
@@ -294,7 +372,7 @@ const renderExerciseManagementList = async () => {
       catSelect.appendChild(opt);
     });
     catDiv.appendChild(catSelect);
-    controlsRow.appendChild(catDiv);
+    controlsLeft.appendChild(catDiv);
 
     const barDiv = document.createElement("div");
     barDiv.className = "bar-selection";
@@ -319,9 +397,21 @@ const renderExerciseManagementList = async () => {
       barSelect.appendChild(opt);
     });
     barDiv.appendChild(barSelect);
-    controlsRow.appendChild(barDiv);
+    controlsLeft.appendChild(barDiv);
+    controlsRow.appendChild(controlsLeft);
 
-    card.appendChild(controlsRow);
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "icon-btn delete-btn delete-exercise-btn";
+    deleteBtn.dataset.id = ex.id;
+    deleteBtn.setAttribute("aria-label", "Delete exercise");
+    deleteBtn.setAttribute("title", "Delete exercise");
+    deleteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+    controlsRow.appendChild(deleteBtn);
+
+    drawerContent.appendChild(controlsRow);
+    drawer.appendChild(drawerContent);
+    card.appendChild(drawer);
+
     item.appendChild(card);
     exerciseList.appendChild(item);
   });
