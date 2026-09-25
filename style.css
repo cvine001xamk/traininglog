@@ -254,6 +254,12 @@ button[disabled],
   color: var(--danger-color);
 }
 
+.timer-badge-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-2);
+}
+
 .badge-timer {
   background-color: var(--surface-color);
   color: var(--secondary-color);
@@ -267,6 +273,11 @@ button[disabled],
   align-items: center;
   flex: 0 1 auto;
   min-height: 0;
+}
+
+.badge-timer-icon {
+  margin-right: 4px;
+  vertical-align: text-bottom;
 }
 
 .badge-timer.active {
@@ -863,9 +874,10 @@ optgroup option {
 
 #last-weight-info {
   font-size: 0.85rem;
-  color: #ccc;
-  display: block; /* Own line */
-  margin-bottom: 0.25rem;
+  color: var(--secondary-color);
+  display: block;
+  margin-top: var(--space-1);
+  min-height: 1.25rem;
 }
 
 #current-workout-list {
@@ -1105,6 +1117,7 @@ optgroup option {
 
 /* Barbell visualizer styles */
 .plate-visualizer-bar {
+  display: none;
   align-items: center;
   justify-content: flex-start;
   max-width: 240px;
@@ -1153,6 +1166,36 @@ optgroup option {
   z-index: 20;
   height: 100%;
   padding: 2px 0;
+}
+
+.plate {
+  width: 14px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-size: 8px;
+  font-weight: bold;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.plates-management-details {
+  margin-bottom: var(--space-4);
+}
+
+#plate-list,
+#exercise-list {
+  margin-top: var(--space-4);
+}
+
+.color-input-field {
+  padding: 0.1rem;
+  min-height: 44px;
+  width: 100%;
+  cursor: pointer;
 }
 
 /* Responsive Design */

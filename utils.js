@@ -338,6 +338,32 @@ export async function getExerciseHistoricalStats(exerciseName) {
   return { maxWeight, max1RM, hasHistory };
 }
 
+// Batch variant: single DB pass collecting stats for multiple exercises at once.
+// Replaces calling getExerciseHistoricalStats in a loop (O(n) scans → 1 scan).
+export async function getBatchExerciseStats(exerciseNames) {
+  const nameSet = new Set(exerciseNames);
+  const stats = {};
+  for (const name of nameSet) {
+    stats[name] = { maxWeight: 0, max1RM: 0, hasHistory: false };
+  }
+
+  await db.workouts.orderBy("date").each((workout) => {
+    workout.exercises.forEach((ex) => {
+      if (nameSet.has(ex.exercise)) {
+        const s = stats[ex.exercise];
+        s.hasHistory = true;
+        const w = parseFloat(ex.weight) || 0;
+        const r = parseInt(ex.reps, 10) || 0;
+        const est1RM = ex.est1RM || calculate1RM(w, r);
+        if (w > s.maxWeight) s.maxWeight = w;
+        if (est1RM > s.max1RM) s.max1RM = est1RM;
+      }
+    });
+  });
+
+  return stats; // { [exerciseName]: { maxWeight, max1RM, hasHistory } }
+}
+
 // PR Celebratory Toast
 export function showPRToast(prList) {
   if (!prList || prList.length === 0) return;

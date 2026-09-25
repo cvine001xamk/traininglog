@@ -26,13 +26,7 @@
 
       <main>
         <section id="log-workout">
-          <div
-            style="
-              display: flex;
-              justify-content: flex-end;
-              margin-bottom: 0.5rem;
-            "
-          >
+          <div class="timer-badge-container">
             <button
               id="timer-badge"
               class="badge-timer"
@@ -40,6 +34,7 @@
               aria-label="Add 1 minute timer"
             >
               <svg
+                class="badge-timer-icon"
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
                 height="16"
@@ -49,7 +44,6 @@
                 stroke-width="2"
                 stroke-linecap="round"
                 stroke-linejoin="round"
-                style="margin-right: 4px; vertical-align: text-bottom"
               >
                 <circle cx="12" cy="12" r="10"></circle>
                 <polyline points="12 6 12 12 16 14"></polyline>
@@ -63,7 +57,7 @@
               <select id="exercise" required>
                 <!-- Exercise options will be populated by JS -->
               </select>
-              <small id="last-weight-info" style="display: block; margin-top: 0.25rem; min-height: 1.25rem; color: var(--secondary-color);"></small>
+              <small id="last-weight-info"></small>
             </div>
             <div class="grid add-exercise-grid">
               <div class="form-group">
@@ -105,7 +99,7 @@
               </div>
             </div>
 
-            <div id="plate-visualizer" class="plate-visualizer-bar" style="display: none;">
+            <div id="plate-visualizer" class="plate-visualizer-bar">
               <!-- Barbell sleeve -->
               <div class="barbell-sleeve"></div>
               <!-- Collar -->
@@ -203,9 +197,9 @@
         </section>
 
         <section id="exercises" hidden>
-          <details style="margin-bottom: 1rem" class="custom-details">
+          <details class="custom-details plates-management-details">
             <summary><h2>Manage Plates</h2></summary>
-            <div id="plate-list" style="margin-top: 1rem">
+            <div id="plate-list">
               <!-- Plate list will be populated by JS -->
             </div>
             <form id="add-new-plate-form">
@@ -240,12 +234,7 @@
                     type="color"
                     id="new-plate-color"
                     value="#cfcfcf"
-                    style="
-                      padding: 0.1rem;
-                      min-height: 44px;
-                      width: 100%;
-                      cursor: pointer;
-                    "
+                    class="color-input-field"
                   />
                 </div>
               </div>
@@ -255,7 +244,7 @@
 
           <details class="custom-details" open>
             <summary><h2>Manage Exercises</h2></summary>
-            <div id="exercise-list" style="margin-top: 1rem">
+            <div id="exercise-list">
               <!-- Exercise list will be populated by JS -->
             </div>
             <form id="add-new-exercise-form">

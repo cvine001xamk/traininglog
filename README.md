@@ -93,6 +93,35 @@ Here are planned features and improvements for future iterations:
 
 ---
 
+## 🐛 Known Issues & Planned Improvements
+
+Findings from a full codebase audit, grouped by priority.
+
+### 🔴 High Priority
+
+- [ ] **Bundle chart plugins locally** (`exercises.js`) — `chartjs-adapter-date-fns`, `chartjs-plugin-zoom`, and `chartjs-plugin-annotation` are currently fetched from `cdn.jsdelivr.net` at runtime, which silently breaks the chart view when offline. These should be bundled locally like `chart.min.js` and added to the service worker cache.
+- [x] **Batch PR stats check on save** (`utils.js`, `app.js`) — `getExerciseHistoricalStats` is called in a `for...of` loop on workout save, triggering one full IndexedDB table scan per exercise. Fixed: replaced with `getBatchExerciseStats` — a single cursor pass that collects stats for all exercises in the workout simultaneously.
+
+### 🟡 Medium Priority
+
+- [x] **Debounce weight input** (`app.js`) — The plate visualizer hits IndexedDB on every keystroke. Fixed: Added a 150ms debounce handler on the weight input to prevent redundant DB reads during rapid typing.
+- [ ] **Fix CSV export encoding** (`history.js`) — `encodeURI` on the data URI doesn't encode `#` characters, which can silently truncate exports for exercises with special characters. Should use `URL.createObjectURL(new Blob(...))` instead.
+- [ ] **History delete/edit — avoid full list re-render** (`history.js`) — Deleting or cancelling an edit currently wipes and re-fetches the entire history list, resetting pagination. Should remove/replace only the affected `<article>` element in the DOM.
+- [ ] **Haptic feedback on workout save** (`app.js`) — The app vibrates on PR and timer finish but not on the primary save action. A short `navigator.vibrate(100)` pulse would reinforce the action on mobile.
+- [ ] **`updateLastWeightInfo` scan can be expensive** (`app.js`) — Scans the full workouts table on every exercise selection change. Could cache historical max values on the exercise record and update them only on save.
+- [ ] **Chart colors use hardcoded hex** (`exercises.js`) — Chart dataset colors (`#3399ff`, `#99aab5`, etc.) are hardcoded instead of reading from CSS custom properties. Should use `getComputedStyle` to read `--primary-color` / `--secondary-color` at render time.
+
+### 🟢 Low Priority / Polish
+
+- [x] **History re-fetches on every tab switch** (`app.js`) — `renderHistory()` is called unconditionally when switching to the History tab. Fixed: Added a `historyDirty` flag gating re-fetches to only when new workouts have been saved or upon initial load.
+- [x] **Plate visualizer uses `cssText` strings** (`app.js`, `style.css`) — Plate elements are styled entirely via `element.style.cssText`, bypassing the CSS custom property system. Fixed: Created `.plate` CSS class with structural and font styles; dynamic plate values (`height`, `backgroundColor`, `color`, `textShadow`) are now set cleanly as direct properties.
+- [ ] **`showAlert` used for success feedback** (`exercises.js`) — Adding a new exercise shows a modal dialog to confirm success. This should use `showSuccessToast` to avoid interrupting the user's flow.
+- [ ] **CSV export loses PR and 1RM data** (`history.js`) — Exported CSVs only contain `Date,Exercise,Weight,Sets,Reps`. Re-importing loses PR badges and stored 1RM values. Optional `Est1RM,IsPR` columns would allow lossless round-trips.
+- [x] **Legacy inline styles in `index.html`** (`index.html`, `style.css`) — Several elements (`#last-weight-info`, timer SVG, `#plate-list`, etc.) use inline `style` attributes. Fixed: Extracted all legacy inline styles into dedicated CSS classes and tokens in `style.css`.
+- [ ] **Drag-to-reorder exercises in workout list** (`app.js`, `style.css`) — Allow reordering exercises in the current workout session list by dragging them up or down (via drag handles and touch-friendly drag-and-drop).
+
+---
+
 ## 📄 License
 
 This project is open-source and available under the standard project license.

@@ -5,7 +5,7 @@ import {
   showSuccessToast,
   calculate1RM,
   calculateVolume,
-  getExerciseHistoricalStats,
+  getBatchExerciseStats,
   showPRToast,
 } from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- DATA ---
   let currentWorkout = [];
+  let historyDirty = true;
 
   // --- VIEWS ---
   const showView = (viewToShow) => {
@@ -71,7 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const showHistoryView = () => {
     showView({ section: historySection, button: historyViewBtn });
-    renderHistory();
+    if (historyDirty) {
+      renderHistory();
+      historyDirty = false;
+    }
   };
 
   const showExercisesView = () => {
@@ -568,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
     plates.plates.forEach((plateItem) => {
       const plateWeight = plateItem.weight || plateItem;
       const plateEl = document.createElement("div");
+      plateEl.className = "plate";
       const plateColor = plateItem.color || getPlateColor(plateWeight);
       const plateHeight = getPlateHeight(plateWeight);
       const textColor = getContrastYIQ(plateColor);
@@ -576,23 +581,10 @@ document.addEventListener("DOMContentLoaded", () => {
           ? "0 0 2px rgba(255,255,255,0.7)"
           : "0 0 2px rgba(0,0,0,0.7)";
 
-      plateEl.style.cssText = `
-        height: ${plateHeight};
-        width: 14px;
-        background-color: ${plateColor};
-        border-radius: 3px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-shadow: inset 0 0 3px rgba(0,0,0,0.5);
-        position: relative;
-        color: ${textColor};
-        text-shadow: ${textShadow};
-        font-size: 8px;
-        font-weight: bold;
-        writing-mode: vertical-rl;
-        text-orientation: mixed;
-      `;
+      plateEl.style.height = plateHeight;
+      plateEl.style.backgroundColor = plateColor;
+      plateEl.style.color = textColor;
+      plateEl.style.textShadow = textShadow;
 
       // Always show text
       plateEl.textContent = plateWeight;
@@ -603,7 +595,16 @@ document.addEventListener("DOMContentLoaded", () => {
     plateVisualizer.style.display = "flex";
   };
 
-  weightInput.addEventListener("input", updatePlateVisualizer);
+  const debounce = (fn, delay = 150) => {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), delay);
+    };
+  };
+
+  const debouncedUpdatePlateVisualizer = debounce(updatePlateVisualizer, 150);
+  weightInput.addEventListener("input", debouncedUpdatePlateVisualizer);
 
   exerciseSelect.addEventListener("change", (e) => {
     Promise.all([
@@ -660,16 +661,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentWorkout.length === 0) return;
     const exerciseCount = currentWorkout.length;
 
-    // Check for PRs across all exercises in current workout session
+    // Check for PRs — single DB pass for all exercises at once
     const prList = [];
+    const batchStats = await getBatchExerciseStats(
+      currentWorkout.map((ex) => ex.exercise),
+    );
+
     for (const ex of currentWorkout) {
-      const stats = await getExerciseHistoricalStats(ex.exercise);
       if (!ex.est1RM) ex.est1RM = calculate1RM(ex.weight, ex.reps);
+      const stats = batchStats[ex.exercise];
 
       let isWeightPR = false;
       let is1RM_PR = false;
 
-      if (stats.hasHistory) {
+      if (stats?.hasHistory) {
         isWeightPR = ex.weight > stats.maxWeight;
         is1RM_PR = ex.est1RM > stats.max1RM;
       }
@@ -687,6 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
       exercises: currentWorkout,
     });
 
+    historyDirty = true;
     currentWorkout = [];
     await renderCurrentWorkout();
     await renderExerciseOptions();
