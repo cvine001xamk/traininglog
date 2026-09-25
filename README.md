@@ -79,7 +79,7 @@ Since **Training Log** is built with standard web technologies and ES modules, y
 
 Here are planned features and improvements for future iterations:
 
-- [ ] **Drag-to-reorder exercises in workout list** (`app.js`, `style.css`) — Allow reordering exercises in the current workout session list by dragging them up or down (via drag handles and touch-friendly drag-and-drop).
+- [ ] **Drag-to-reorder exercises in workout list** (`app.js`, `style.css`) — Allow reordering exercises in the exercises tab list by dragging them up or down (via drag handles and touch-friendly drag-and-drop). The order also affects the dropdown order on the log tab. Reordering should only be done by user in the exercises tab, not on the log tab.
 - [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set for advanced autoregulation.
 - [ ] **Warm-up Set Calculator**: Automatically calculate progressive warm-up sets and barbell plate loadings leading up to working sets.
 - [ ] **Workout Templates & Routines**: Create, save, and quickly start pre-configured workout routines (e.g., Push/Pull/Legs, Upper/Lower, 5/3/1).
