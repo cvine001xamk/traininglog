@@ -79,7 +79,6 @@ Since **Training Log** is built with standard web technologies and ES modules, y
 
 Here are planned features and improvements for future iterations:
 
-- [x] **Auxiliary & Bodyweight Exercise Support**: Log landmine workouts, ab crunches, and core/bodyweight exercises cleanly with categorized `<optgroup>` dropdowns, adaptive weight inputs (supporting 0 kg bodyweight), and automated plate visualizer suppression.
 - [ ] **Drag-to-reorder exercises in workout list** (`app.js`, `style.css`) — Allow reordering exercises in the current workout session list by dragging them up or down (via drag handles and touch-friendly drag-and-drop).
 - [ ] **RPE & RIR Tracking**: Add Rate of Perceived Exertion (RPE 1–10) and Reps in Reserve (RIR) fields per set for advanced autoregulation.
 - [ ] **Warm-up Set Calculator**: Automatically calculate progressive warm-up sets and barbell plate loadings leading up to working sets.
@@ -89,7 +88,6 @@ Here are planned features and improvements for future iterations:
 - [ ] **Exercise Notes & Form Cues**: Attach persistent form cues, technique notes, and workout session reflections.
 - [ ] **Calendar & Consistency Heatmap**: Visual training calendar with weekly streaks and monthly workout frequency heatmaps.
 - [ ] **Lossless JSON Backup & Restore**: Full offline database export and restore in JSON format alongside CSV support.
-- [ ] **Custom Audio Rest Timer Alerts**: Optional audio chimes/bell sound cues when the rest timer finishes.
 - [ ] **Relative Strength Metrics (Wilks / DOTS)**: Optional bodyweight tracking to calculate strength-to-weight ratios over time.
 
 ---
