@@ -500,6 +500,68 @@ article header {
   width: 100%;
 }
 
+/* Drag to Reorder in Exercises List */
+.drag-handle {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary-color);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+  padding: 0;
+  margin-right: 0.15rem;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.drag-handle:hover,
+.drag-handle:focus-visible {
+  color: var(--primary-color);
+  background: rgba(51, 153, 255, 0.12);
+  border-color: rgba(51, 153, 255, 0.25);
+  outline: none;
+}
+
+.drag-handle:active,
+.exercise-manage-item.is-dragging .drag-handle {
+  cursor: grabbing;
+  color: #ffffff;
+}
+
+.drag-handle-icon {
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.drag-handle:hover .drag-handle-icon,
+.drag-handle:focus-visible .drag-handle-icon {
+  opacity: 1;
+}
+
+.drag-placeholder {
+  min-height: 48px;
+  margin-bottom: 0.35rem;
+  border: 2px dashed rgba(51, 153, 255, 0.5);
+  background: rgba(51, 153, 255, 0.08);
+  border-radius: var(--border-radius);
+  box-sizing: border-box;
+}
+
+#exercise-list .exercise-manage-item.is-dragging {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6), 0 0 16px rgba(51, 153, 255, 0.4) !important;
+  background: linear-gradient(135deg, rgba(35, 45, 120, 0.95) 0%, rgba(20, 25, 80, 0.95) 100%) !important;
+  pointer-events: none;
+  transition: none !important;
+}
+
 .exercise-manage-header {
   display: flex;
   justify-content: space-between;

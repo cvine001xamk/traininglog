@@ -7,6 +7,7 @@ import {
   calculateVolume,
   getBatchExerciseStats,
   showPRToast,
+  getOrderedExercises,
 } from "./utils.js";
 import { initHistory, renderHistory } from "./history.js";
 import { initExercises, manageExercises } from "./exercises.js";
@@ -206,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const renderExerciseOptions = async () => {
-    const allExercises = await db.exercises.toArray();
+    const allExercises = await getOrderedExercises();
     const currentWorkoutExerciseNames = currentWorkout.map((ex) => ex.exercise);
     const availableExercises = allExercises.filter(
       (ex) => !currentWorkoutExerciseNames.includes(ex.name),
@@ -251,9 +252,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    appendGroup("Primary Lifts", barbellExercises);
-    appendGroup("Auxiliary & Landmine", auxiliaryExercises);
-    appendGroup("Bodyweight & Core", bodyweightExercises);
+    const groups = [
+      { label: "Primary Lifts", list: barbellExercises },
+      { label: "Auxiliary & Landmine", list: auxiliaryExercises },
+      { label: "Bodyweight & Core", list: bodyweightExercises },
+    ].filter((g) => g.list.length > 0);
+
+    // Keep optgroups ordered according to the first exercise appearance in the custom order
+    groups.sort((a, b) => {
+      return (
+        availableExercises.indexOf(a.list[0]) -
+        availableExercises.indexOf(b.list[0])
+      );
+    });
+
+    groups.forEach((g) => appendGroup(g.label, g.list));
 
     await updateExerciseFormMode(exerciseSelect.value);
     await updateLastWeightInfo(exerciseSelect.value);
@@ -711,11 +724,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const exerciseCount = await db.exercises.count();
     if (exerciseCount === 0) {
       const defaultExercises = [
-        { name: "Back Squat", barWeight: 20 },
-        { name: "Bench Press", barWeight: 20 },
-        { name: "Overhead Press", barWeight: 20 },
-        { name: "Barbell Row", barWeight: 20 },
-        { name: "Deadlift", barWeight: 20 },
+        { name: "Back Squat", barWeight: 20, order: 0 },
+        { name: "Bench Press", barWeight: 20, order: 1 },
+        { name: "Overhead Press", barWeight: 20, order: 2 },
+        { name: "Barbell Row", barWeight: 20, order: 3 },
+        { name: "Deadlift", barWeight: 20, order: 4 },
       ];
       await db.exercises.bulkAdd(defaultExercises);
     }

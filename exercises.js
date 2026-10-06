@@ -1,5 +1,14 @@
-// exercises.js
-import { db, loadScript, showAlert, showConfirm, invalidatePlatesCache, calculate1RM, calculateVolume } from "./utils.js";
+import {
+  db,
+  loadScript,
+  showAlert,
+  showConfirm,
+  invalidatePlatesCache,
+  calculate1RM,
+  calculateVolume,
+  getOrderedExercises,
+  saveExercisesOrder,
+} from "./utils.js";
 
 let exerciseList;
 let addNewExerciseForm;
@@ -110,10 +119,20 @@ export function initExercises() {
       if (isNaN(barWeight) || category !== "barbell") barWeight = 0;
 
       if (newExerciseName) {
+        const allEx = await db.exercises.toArray();
+        const maxOrder = allEx.reduce(
+          (max, ex) =>
+            Math.max(
+              max,
+              typeof ex.order === "number" ? ex.order : (ex.id || 0),
+            ),
+          -1,
+        );
         await db.exercises.add({
           name: newExerciseName,
           barWeight: barWeight,
           category: category,
+          order: maxOrder + 1,
         });
         await renderExerciseManagementList();
         newExerciseNameInput.value = "";
@@ -225,6 +244,181 @@ export function initExercises() {
       }
     });
 
+    const setupDragAndDrop = () => {
+      exerciseList.addEventListener("pointerdown", (e) => {
+        const handle = e.target.closest(".drag-handle");
+        if (!handle || e.button !== 0) return;
+        const item = handle.closest(".exercise-manage-item");
+        if (!item) return;
+
+        e.preventDefault();
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const initialRect = item.getBoundingClientRect();
+        const offsetY = startY - initialRect.top;
+        let isDragging = false;
+        let placeholder = null;
+
+        const onPointerMove = (moveEvent) => {
+          const deltaX = moveEvent.clientX - startX;
+          const deltaY = moveEvent.clientY - startY;
+
+          if (!isDragging) {
+            if (Math.hypot(deltaX, deltaY) < 5) return;
+            isDragging = true;
+            if (navigator.vibrate) {
+              try {
+                navigator.vibrate(25);
+              } catch (_) {}
+            }
+
+            placeholder = document.createElement("div");
+            placeholder.className = "drag-placeholder";
+            placeholder.style.height = `${initialRect.height}px`;
+            item.parentNode.insertBefore(placeholder, item);
+
+            item.classList.add("is-dragging");
+            item.style.position = "fixed";
+            item.style.left = `${initialRect.left}px`;
+            item.style.width = `${initialRect.width}px`;
+            item.style.top = `${moveEvent.clientY - offsetY}px`;
+            item.style.zIndex = "1000";
+          }
+
+          item.style.top = `${moveEvent.clientY - offsetY}px`;
+
+          // Edge autoscroll for long lists
+          const viewportHeight = window.innerHeight;
+          if (moveEvent.clientY < 70) {
+            window.scrollBy({ top: -8, behavior: "auto" });
+          } else if (moveEvent.clientY > viewportHeight - 80) {
+            window.scrollBy({ top: 8, behavior: "auto" });
+          }
+
+          const siblings = Array.from(
+            exerciseList.querySelectorAll(".exercise-manage-item:not(.is-dragging)"),
+          );
+          if (siblings.length > 0) {
+            const firstRect = siblings[0].getBoundingClientRect();
+            const lastRect = siblings[siblings.length - 1].getBoundingClientRect();
+            if (moveEvent.clientY < firstRect.top) {
+              if (placeholder.nextSibling !== siblings[0]) {
+                exerciseList.insertBefore(placeholder, siblings[0]);
+              }
+            } else if (moveEvent.clientY > lastRect.bottom) {
+              if (placeholder !== exerciseList.lastElementChild) {
+                exerciseList.appendChild(placeholder);
+              }
+            } else {
+              for (const sib of siblings) {
+                const rect = sib.getBoundingClientRect();
+                if (moveEvent.clientY >= rect.top && moveEvent.clientY <= rect.bottom) {
+                  const midY = rect.top + rect.height / 2;
+                  if (moveEvent.clientY < midY) {
+                    if (placeholder.nextSibling !== sib) {
+                      exerciseList.insertBefore(placeholder, sib);
+                    }
+                  } else {
+                    if (placeholder !== sib.nextSibling) {
+                      exerciseList.insertBefore(placeholder, sib.nextSibling);
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        };
+
+        const onPointerUp = async () => {
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+          window.removeEventListener("pointercancel", onPointerUp);
+
+          if (isDragging && placeholder) {
+            exerciseList.insertBefore(item, placeholder);
+            placeholder.remove();
+
+            item.classList.remove("is-dragging");
+            item.style.position = "";
+            item.style.left = "";
+            item.style.width = "";
+            item.style.top = "";
+            item.style.zIndex = "";
+
+            if (navigator.vibrate) {
+              try {
+                navigator.vibrate(35);
+              } catch (_) {}
+            }
+
+            const currentItems = Array.from(
+              exerciseList.querySelectorAll(".exercise-manage-item"),
+            );
+            const newOrderedIds = currentItems
+              .map((el) => parseInt(el.dataset.id, 10))
+              .filter((id) => !isNaN(id));
+
+            await saveExercisesOrder(newOrderedIds);
+          }
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", onPointerUp);
+        window.addEventListener("pointercancel", onPointerUp);
+      });
+
+      // Keyboard support for reordering with ArrowUp and ArrowDown
+      exerciseList.addEventListener("keydown", async (e) => {
+        const handle = e.target.closest(".drag-handle");
+        if (!handle) return;
+
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          const item = handle.closest(".exercise-manage-item");
+          const prev = item.previousElementSibling;
+          if (prev && prev.classList.contains("exercise-manage-item")) {
+            exerciseList.insertBefore(item, prev);
+            handle.focus();
+            const currentItems = Array.from(
+              exerciseList.querySelectorAll(".exercise-manage-item"),
+            );
+            const newOrderedIds = currentItems
+              .map((el) => parseInt(el.dataset.id, 10))
+              .filter((id) => !isNaN(id));
+            await saveExercisesOrder(newOrderedIds);
+            if (navigator.vibrate) {
+              try {
+                navigator.vibrate(20);
+              } catch (_) {}
+            }
+          }
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          const item = handle.closest(".exercise-manage-item");
+          const next = item.nextElementSibling;
+          if (next && next.classList.contains("exercise-manage-item")) {
+            exerciseList.insertBefore(item, next.nextElementSibling);
+            handle.focus();
+            const currentItems = Array.from(
+              exerciseList.querySelectorAll(".exercise-manage-item"),
+            );
+            const newOrderedIds = currentItems
+              .map((el) => parseInt(el.dataset.id, 10))
+              .filter((id) => !isNaN(id));
+            await saveExercisesOrder(newOrderedIds);
+            if (navigator.vibrate) {
+              try {
+                navigator.vibrate(20);
+              } catch (_) {}
+            }
+          }
+        }
+      });
+    };
+
+    setupDragAndDrop();
+
     initExercises.initialized = true;
   }
 }
@@ -271,7 +465,7 @@ const renderPlateList = async () => {
 };
 
 const renderExerciseManagementList = async () => {
-  const exercises = await db.exercises.toArray();
+  const exercises = await getOrderedExercises();
   exerciseList.innerHTML = "";
   exercises.forEach((ex) => {
     const item = document.createElement("article");
@@ -284,9 +478,26 @@ const renderExerciseManagementList = async () => {
     const card = document.createElement("div");
     card.className = "exercise-manage-card";
 
-    // Header row: Exercise name & badge on left, History & Expand toggle on right
+    // Header row: Drag handle, Exercise name & badge on left, History & Expand toggle on right
     const headerRow = document.createElement("div");
     headerRow.className = "exercise-manage-header";
+
+    const dragHandle = document.createElement("button");
+    dragHandle.className = "icon-btn drag-handle";
+    dragHandle.type = "button";
+    dragHandle.dataset.id = ex.id;
+    dragHandle.setAttribute("aria-label", `Reorder ${ex.name}`);
+    dragHandle.setAttribute("title", "Drag or use Up/Down arrow keys to reorder");
+    dragHandle.innerHTML = `
+      <svg class="drag-handle-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="9" cy="5" r="1.75"/>
+        <circle cx="15" cy="5" r="1.75"/>
+        <circle cx="9" cy="12" r="1.75"/>
+        <circle cx="15" cy="12" r="1.75"/>
+        <circle cx="9" cy="19" r="1.75"/>
+        <circle cx="15" cy="19" r="1.75"/>
+      </svg>`;
+    headerRow.appendChild(dragHandle);
 
     const titleGroup = document.createElement("div");
     titleGroup.className = "exercise-manage-title-group";

@@ -11,6 +11,11 @@ db.version(2).stores({
   workouts: "++id,date",
   plates: "++id,weight,amount",
 });
+db.version(3).stores({
+  exercises: "++id,name,order",
+  workouts: "++id,date",
+  plates: "++id,weight,amount",
+});
 
 // Helper to calculate plate split using available plates
 let platesCache = null;
@@ -407,5 +412,31 @@ export function showPRToast(prList) {
     }, index * 400);
   });
 }
+
+/**
+ * Retrieve all exercises sorted by custom user order (falls back to ID).
+ * @returns {Promise<Array>}
+ */
+export async function getOrderedExercises() {
+  const exercises = await db.exercises.toArray();
+  return exercises.sort((a, b) => {
+    const orderA = typeof a.order === "number" ? a.order : (a.id ?? 0);
+    const orderB = typeof b.order === "number" ? b.order : (b.id ?? 0);
+    return orderA - orderB;
+  });
+}
+
+/**
+ * Persist reordered exercise IDs to IndexedDB.
+ * @param {Array<number>} orderedIds
+ */
+export async function saveExercisesOrder(orderedIds) {
+  await db.transaction("rw", db.exercises, async () => {
+    for (let i = 0; i < orderedIds.length; i++) {
+      await db.exercises.update(orderedIds[i], { order: i });
+    }
+  });
+}
+
 
 

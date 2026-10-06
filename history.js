@@ -377,6 +377,7 @@ const importFromCSV = () => {
             name: exerciseName,
             barWeight: barWeight,
             category: category,
+            order: allExercises.length + exercisesToAdd.length,
           });
           allExerciseNames.add(exerciseName);
         }
