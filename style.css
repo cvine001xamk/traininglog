@@ -409,34 +409,35 @@ article header {
 }
 
 #history-list .exercises-container > div {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
   font-size: 0.9rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 0.25rem;
+  padding-bottom: 0.5rem;
 }
 
 #history-list .exercises-container > div:last-child {
   border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .exercise-title-wrapper {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  flex-shrink: 0;
 }
 
 .exercise-details {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: flex-end;
-  text-align: right;
+  justify-content: flex-start;
+  text-align: left;
+  color: var(--secondary-color);
 }
 
 /* Details and Accordions */
